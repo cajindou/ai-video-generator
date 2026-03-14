@@ -1,0 +1,406 @@
+/* 客服页面样式 - 科技风格 */
+.tech-chat-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 基础背景 */
+.tech-bg,
+.tech-particles,
+.tech-safe-area {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(168, 85, 247, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.tech-particles {
+  background-image: 
+    radial-gradient(circle, rgba(139, 92, 246, 0.2) 1px, transparent 1px),
+    radial-gradient(circle, rgba(99, 102, 241, 0.2) 1px, transparent 1px);
+  background-size: 50px 50px, 30px 30px;
+  background-position: 0 0, 25px 25px;
+  animation: techFloat 20s linear infinite;
+}
+
+@keyframes techFloat {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-50px); }
+}
+
+.tech-safe-area {
+  height: env(safe-area-inset-bottom);
+  display: none;
+}
+
+/* 顶部标题栏 */
+.tech-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 16px 16px;
+  background: rgba(26, 26, 46, 0.9);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.tech-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tech-avatar-container {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.tech-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid rgba(139, 92, 246, 0.5);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.tech-avatar-online {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  background: #10B981;
+  border-radius: 50%;
+  border: 2px solid #1a1a2e;
+}
+
+.tech-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tech-header-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.tech-header-status {
+  font-size: 12px;
+  color: #10B981;
+  font-weight: 600;
+}
+
+.tech-header-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 20px;
+}
+
+.tech-header-rating {
+  font-size: 14px;
+  color: #F59E0B;
+  font-weight: 700;
+}
+
+/* 快捷问题区 */
+.tech-quick-questions {
+  padding: 20px 16px;
+}
+
+.tech-quick-title {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 12px;
+}
+
+.tech-quick-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tech-quick-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 20px;
+  transition: all 0.3s;
+}
+
+.tech-quick-item:active {
+  background: rgba(139, 92, 246, 0.2);
+  transform: scale(0.98);
+}
+
+.tech-quick-icon {
+  flex-shrink: 0;
+}
+
+.tech-quick-text {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* 消息列表 */
+.tech-message-list {
+  padding: 0 16px 20px;
+  min-height: calc(100vh - 200px);
+}
+
+.tech-message-item {
+  margin-bottom: 20px;
+}
+
+.tech-message-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  max-width: 85%;
+}
+
+.tech-message-assistant {
+  align-self: flex-start;
+}
+
+.tech-message-user {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.tech-message-avatar {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid rgba(139, 92, 246, 0.3);
+}
+
+.tech-message-avatar-user {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%);
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.tech-message-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tech-message-assistant-content {
+  align-items: flex-start;
+}
+
+.tech-message-user-content {
+  align-items: flex-end;
+}
+
+.tech-message-text {
+  padding: 12px 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  border-radius: 16px;
+}
+
+.tech-message-assistant-content .tech-message-text {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(99, 102, 241, 0.15) 100%);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  color: rgba(255, 255, 255, 0.95);
+  border-top-left-radius: 4px;
+}
+
+.tech-message-user-content .tech-message-text {
+  background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%);
+  color: #fff;
+  border-top-right-radius: 4px;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.tech-message-time {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0 4px;
+}
+
+/* 输入中动画 */
+.tech-typing-indicator {
+  display: flex;
+  gap: 4px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(99, 102, 241, 0.15) 100%);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 16px;
+  border-top-left-radius: 4px;
+}
+
+.tech-typing-dot {
+  width: 6px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 50%;
+  animation: typingBounce 1.4s ease-in-out infinite;
+}
+
+.tech-typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.tech-typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typingBounce {
+  0%, 80%, 100% {
+    transform: scale(0.6);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* 底部输入栏 */
+.tech-input-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  background: rgba(26, 26, 46, 0.95);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(139, 92, 246, 0.2);
+  z-index: 100;
+}
+
+.tech-icon-btn {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 12px;
+  padding: 0;
+  margin: 0;
+}
+
+.tech-btn-recording {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  animation: techPulse 1s ease-in-out infinite;
+}
+
+@keyframes techPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+}
+
+.tech-input-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: rgba(139, 92, 246, 0.05);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 24px;
+  padding: 0 16px;
+}
+
+.tech-input {
+  flex: 1;
+  height: 44px;
+  font-size: 14px;
+  color: #fff;
+  background: transparent;
+  border: none;
+}
+
+.tech-input-placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.tech-send-btn {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  padding: 0;
+  margin: 0;
+  transition: all 0.3s;
+}
+
+.tech-btn-active {
+  background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.tech-btn-disabled {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 辅助类 */
+.flex {
+  display: flex;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.gap-1 {
+  gap: 4px;
+}
+
+/* 隐藏滚动条 */
+.tech-message-list::-webkit-scrollbar {
+  display: none;
+}
+
+.tech-message-list {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

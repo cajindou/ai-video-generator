@@ -1,0 +1,51 @@
+export default defineAppConfig({
+  pages: [
+    'pages/index/index',
+    'pages/discover/index',
+    'pages/profile/index',
+    'pages/chat/index',
+    'pages/video-player/index',
+    'pages/image-editor/index',
+    'pages/privacy/index',
+    'pages/agreement/index',
+    'pages/vip/index'
+  ],
+  window: {
+    backgroundTextStyle: 'light',
+    navigationBarBackgroundColor: '#1a1a2e',
+    navigationBarTitleText: '宇轩百货',
+    navigationBarTextStyle: 'white'
+  },
+  tabBar: {
+    color: '#999999',
+    selectedColor: '#8B5CF6',
+    backgroundColor: '#1a1a2e',
+    borderStyle: 'white',
+    list: [
+      {
+        pagePath: 'pages/index/index',
+        text: '首页',
+        iconPath: './assets/tabbar/home.png',
+        selectedIconPath: './assets/tabbar/home-active.png',
+      },
+      {
+        pagePath: 'pages/discover/index',
+        text: '发现',
+        iconPath: './assets/tabbar/heart.png',
+        selectedIconPath: './assets/tabbar/heart-active.png',
+      },
+      {
+        pagePath: 'pages/chat/index',
+        text: '在线客服',
+        iconPath: './assets/tabbar/message-square.png',
+        selectedIconPath: './assets/tabbar/message-square-active.png',
+      },
+      {
+        pagePath: 'pages/profile/index',
+        text: '我的',
+        iconPath: './assets/tabbar/user.png',
+        selectedIconPath: './assets/tabbar/user-active.png',
+      }
+    ]
+  }
+})

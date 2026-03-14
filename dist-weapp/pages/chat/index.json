@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "在线客服助手",
+  "backgroundColor": "#1a1a2e",
+  "usingComponents": {
+    "comp": "../../comp"
+  }
+}

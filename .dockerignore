@@ -1,0 +1,65 @@
+# 依赖
+node_modules
+.pnpm-store
+
+# 构建产物
+dist
+dist-weapp
+dist-web
+
+# 数据库
+data.db
+data.db-shm
+data.db-wal
+*.db
+*.db-shm
+*.db-wal
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# 日志
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 测试
+coverage
+.nyc_output
+
+# 临时文件
+*.tmp
+.cache
+.swc
+
+# 文档
+*.md
+!README.md
+
+# 配置文件
+.env.local
+.env.*.local
+.eslintrc
+.prettierrc
+
+# Coze 相关
+.coze
+.cozeproj
+
+# 备份文件
+project-backup.tar.gz
+*.tar.gz
+!Dockerfile
+!docker-compose.yml
+
+# 微信小程序配置
+project.config.json
+private.key

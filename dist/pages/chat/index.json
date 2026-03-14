@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "小七助手",
+  "backgroundColor": "#1a1a2e",
+  "usingComponents": {
+    "comp": "../../comp"
+  }
+}

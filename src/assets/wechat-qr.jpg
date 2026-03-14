@@ -1,0 +1,6 @@
+[收款码图片已保存，实际使用时请将图片文件复制到此路径]
+
+注意：请手动将收款码图片复制到 /workspace/projects/src/assets/wechat-qr.jpg
+
+或者使用命令：
+cp [你的收款码图片路径] /workspace/projects/src/assets/wechat-qr.jpg

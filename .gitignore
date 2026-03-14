@@ -1,0 +1,61 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Production (已移除 dist 和 dist-weapp，需要提交编译后的文件供微信开发者工具使用)
+build/
+
+# Misc
+.DS_Store
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor directories and files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Taro specific
+.taro/
+
+# OS X
+.DS_Store
+
+# Key
+# key/
+# server/dist - 已移除，需要在生产环境中使用
+
+# Database files
+*.db
+*.db-wal
+*.db-shm
+data.db*
+
+# Archive files
+*.tar.gz
+*.tgz
+*.zip
+
+# Compiled files (dist, dist-weapp, dist-web will be removed from git)
+dist/
+dist-weapp/
+dist-web/
+
+# Large files (over 50MB)
+*.mp4
+*.avi
+*.mov
+*.mkv
