@@ -23,6 +23,11 @@ async function bootstrap() {
     origin: true,
     credentials: true,
   });
+  
+  // 静态文件服务 - 在 setGlobalPrefix 之前配置，避免路径冲突
+  const uploadDir = process.env.UPLOAD_DIR || '/app/uploads';
+  app.use('/api/uploads', express.static(uploadDir));
+  
   app.setGlobalPrefix('api');
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ limit: '50mb', extended: true }));
