@@ -1,5 +1,8 @@
 import Taro from '@tarojs/taro'
 
+// 生产环境域名 - 小程序专用
+const PRODUCTION_DOMAIN = 'https://yuxuanbaihuo.site'
+
 /**
  * 网络请求模块
  * 封装 Taro.request、Taro.uploadFile、Taro.downloadFile，自动添加项目域名前缀
@@ -13,7 +16,9 @@ export namespace Network {
         if (url.startsWith('http://') || url.startsWith('https://')) {
             return url
         }
-        return `${PROJECT_DOMAIN}${url}`
+        // 优先使用生产域名，确保小程序连接到正确的服务器
+        const domain = PRODUCTION_DOMAIN || (typeof PROJECT_DOMAIN !== 'undefined' ? PROJECT_DOMAIN : '')
+        return `${domain}${url}`
     }
 
     export const request: typeof Taro.request = option => {
