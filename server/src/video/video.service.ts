@@ -1198,8 +1198,10 @@ export class VideoService {
           })
           .save(outputPath);
       } else {
-        // 无配音：使用静音
+        // 无配音：使用 filter_complex 生成静音音频
         console.log('使用静音音频...');
+        const filterComplexWithAudio = `${vf};anullsrc=channel_layout=stereo:sample_rate=44100[a]`;
+        
         ffmpeg()
           .input(inputPath)
           .videoCodec('libx264')
@@ -1207,8 +1209,9 @@ export class VideoService {
           .outputOptions([
             '-preset ultrafast',
             '-crf 28',
-            '-vf', vf,
-            '-af', 'anullsrc=r=44100:cl=stereo',
+            '-filter_complex', filterComplexWithAudio,
+            '-map', '0:v',
+            '-map', '[a]',
             '-shortest'
           ])
           .on('end', () => {

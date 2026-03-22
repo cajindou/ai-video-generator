@@ -195,7 +195,7 @@ export class DatabaseController {
     if (!body.openid) {
       return ResponseHelper.badRequest('openid 不能为空')
     }
-    const isFav = await this.databaseService.addUserVideoFavorite(body)
-    return ResponseHelper.success({ isFavorite: isFav }, isFav ? '已收藏' : '已取消收藏')
+    await this.databaseService.addUserVideoFavorite(body)
+    return ResponseHelper.success({ isFavorite: true }, '收藏成功')
   }
 }

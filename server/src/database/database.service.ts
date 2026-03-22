@@ -1,283 +1,141 @@
 import { Injectable } from '@nestjs/common'
-import { db, videoHistory, videoFavorites, users, NewVideoHistory, NewVideoFavorites, VideoHistory, VideoFavorites } from '@/database'
-import { eq, desc } from 'drizzle-orm'
+import { useMemoryStorage, memoryUsers, memoryPlans, memoryOrders } from '@/database'
+import type { VideoHistory, VideoFavorites, NewVideoHistory, NewVideoFavorites } from './schema'
+
+// 内存存储
+const memoryHistory: any[] = []
+const memoryFavorites: any[] = []
 
 @Injectable()
 export class DatabaseService {
   /**
-   * ========================
    * 视频历史记录操作
-   * ========================
    */
 
-  /**
-   * 添加历史记录
-   */
   async addVideoHistory(item: Omit<NewVideoHistory, 'id' | 'createdAt'>): Promise<void> {
-    const newItem: NewVideoHistory = {
+    const newItem = {
       ...item,
       id: `history_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       createdAt: new Date(),
     }
-
-    await db.insert(videoHistory).values(newItem)
-
-    // 限制历史记录数量为 50 条
-    const allHistory = await db
-      .select()
-      .from(videoHistory)
-      .orderBy(desc(videoHistory.createdAt))
-
-    if (allHistory.length > 50) {
-      // 删除超出限制的记录
-      const toDelete = allHistory.slice(50)
-      for (const record of toDelete) {
-        await db.delete(videoHistory).where(eq(videoHistory.id, record.id))
-      }
-    }
+    memoryHistory.unshift(newItem)
+    if (memoryHistory.length > 50) memoryHistory.pop()
   }
 
-  /**
-   * 获取所有历史记录
-   */
-  async getAllVideoHistory(): Promise<VideoHistory[]> {
-    return await db
-      .select()
-      .from(videoHistory)
-      .orderBy(desc(videoHistory.createdAt))
+  async getAllVideoHistory(): Promise<any[]> {
+    return memoryHistory
   }
 
-  /**
-   * 获取分页历史记录
-   */
-  async getPaginatedVideoHistory(page: number = 1, pageSize: number = 10): Promise<{
-    list: VideoHistory[]
-    total: number
-    page: number
-    pageSize: number
-  }> {
-    const allHistory = await this.getAllVideoHistory()
-    const total = allHistory.length
+  async getPaginatedVideoHistory(page: number = 1, pageSize: number = 10): Promise<{ list: any[], total: number, page: number, pageSize: number }> {
     const start = (page - 1) * pageSize
-    const list = allHistory.slice(start, start + pageSize)
-
-    return { list, total, page, pageSize }
+    return { list: memoryHistory.slice(start, start + pageSize), total: memoryHistory.length, page, pageSize }
   }
 
-  /**
-   * 删除历史记录
-   */
   async removeVideoHistory(id: string): Promise<void> {
-    await db.delete(videoHistory).where(eq(videoHistory.id, id))
+    const idx = memoryHistory.findIndex(h => h.id === id)
+    if (idx > -1) memoryHistory.splice(idx, 1)
   }
 
-  /**
-   * 清空所有历史记录
-   */
   async clearVideoHistory(): Promise<void> {
-    await db.delete(videoHistory)
+    memoryHistory.length = 0
   }
 
-  /**
-   * 获取历史记录统计信息
-   */
-  async getVideoHistoryStats(): Promise<{
-    total: number
-    todayCount: number
-    weekCount: number
-  }> {
-    const allHistory = await this.getAllVideoHistory()
-    const now = new Date()
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    const weekStart = new Date(now)
-    weekStart.setDate(weekStart.getDate() - weekStart.getDay())
-    weekStart.setHours(0, 0, 0, 0)
-
-    const todayCount = allHistory.filter((item) => item.createdAt >= todayStart).length
-    const weekCount = allHistory.filter((item) => item.createdAt >= weekStart).length
-
+  async getVideoHistoryStats(): Promise<{ total: number, todayCount: number, weekCount: number }> {
+    const now = Date.now()
+    const todayStart = new Date().setHours(0, 0, 0, 0)
+    const weekStart = now - 7 * 24 * 60 * 60 * 1000
+    
     return {
-      total: allHistory.length,
-      todayCount,
-      weekCount,
+      total: memoryHistory.length,
+      todayCount: memoryHistory.filter(h => new Date(h.createdAt).getTime() >= todayStart).length,
+      weekCount: memoryHistory.filter(h => new Date(h.createdAt).getTime() >= weekStart).length,
     }
   }
 
   /**
-   * ========================
    * 视频收藏操作
-   * ========================
    */
 
-  /**
-   * 添加收藏
-   */
   async addVideoFavorite(item: Omit<NewVideoFavorites, 'id' | 'createdAt'>): Promise<void> {
-    // 检查是否已存在
-    const existing = await db
-      .select()
-      .from(videoFavorites)
-      .where(eq(videoFavorites.videoUrl, item.videoUrl))
-      .limit(1)
-
-    if (existing.length > 0) {
-      return
-    }
-
-    const newItem: NewVideoFavorites = {
+    const newItem = {
       ...item,
-      id: `favorite_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `fav_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       createdAt: new Date(),
     }
-
-    await db.insert(videoFavorites).values(newItem)
+    memoryFavorites.unshift(newItem)
   }
 
-  /**
-   * 获取所有收藏
-   */
-  async getAllVideoFavorites(): Promise<VideoFavorites[]> {
-    return await db
-      .select()
-      .from(videoFavorites)
-      .orderBy(desc(videoFavorites.createdAt))
+  async getAllVideoFavorites(): Promise<any[]> {
+    return memoryFavorites
   }
 
-  /**
-   * 检查是否已收藏
-   */
   async isVideoFavorite(videoUrl: string): Promise<boolean> {
-    const existing = await db
-      .select()
-      .from(videoFavorites)
-      .where(eq(videoFavorites.videoUrl, videoUrl))
-      .limit(1)
-
-    return existing.length > 0
+    return memoryFavorites.some(f => f.videoUrl === videoUrl)
   }
 
-  /**
-   * 删除收藏
-   */
   async removeVideoFavorite(videoUrl: string): Promise<void> {
-    await db.delete(videoFavorites).where(eq(videoFavorites.videoUrl, videoUrl))
+    const idx = memoryFavorites.findIndex(f => f.videoUrl === videoUrl)
+    if (idx > -1) memoryFavorites.splice(idx, 1)
   }
 
-  /**
-   * 清空所有收藏
-   */
   async clearVideoFavorites(): Promise<void> {
-    await db.delete(videoFavorites)
+    memoryFavorites.length = 0
   }
 
-  /**
-   * 切换收藏状态
-   */
-  async toggleVideoFavorite(item: Omit<NewVideoFavorites, 'id' | 'createdAt'>): Promise<boolean> {
-    const isFav = await this.isVideoFavorite(item.videoUrl)
+  async toggleVideoFavorite(item: Omit<NewVideoFavorites, 'id' | 'createdAt'>): Promise<{ isFavorite: boolean }> {
+    const isFav = await this.isVideoFavorite(item.videoUrl!)
     if (isFav) {
-      await this.removeVideoFavorite(item.videoUrl)
-      return false
+      await this.removeVideoFavorite(item.videoUrl!)
+      return { isFavorite: false }
     } else {
       await this.addVideoFavorite(item)
-      return true
+      return { isFavorite: true }
     }
   }
 
   /**
-   * ========================
-   * 数据库初始化
-   * ========================
+   * 用户历史记录
    */
 
-  /**
-   * 初始化数据库（创建表）
-   */
+  async getUserVideoHistory(openid: string, page: number = 1, pageSize: number = 10): Promise<any[]> {
+    const userHistory = memoryHistory.filter(h => h.openid === openid)
+    const start = (page - 1) * pageSize
+    return userHistory.slice(start, start + pageSize)
+  }
+
+  async getUserVideoFavorites(openid: string, page: number = 1, pageSize: number = 10): Promise<any[]> {
+    const userFavs = memoryFavorites.filter(f => f.openid === openid)
+    const start = (page - 1) * pageSize
+    return userFavs.slice(start, start + pageSize)
+  }
+
+  async addUserVideoHistory(item: any): Promise<void> {
+    return this.addVideoHistory(item)
+  }
+
+  async addUserVideoFavorite(item: any): Promise<void> {
+    return this.addVideoFavorite(item)
+  }
+
+  // 别名方法
+  async getUserHistory(openid: string, page?: number, pageSize?: number): Promise<any[]> {
+    return this.getUserVideoHistory(openid, page, pageSize)
+  }
+
+  async getUserFavorites(openid: string, page?: number, pageSize?: number): Promise<any[]> {
+    return this.getUserVideoFavorites(openid, page, pageSize)
+  }
+
+  async addUserHistory(item: any): Promise<void> {
+    return this.addVideoHistory(item)
+  }
+
+  async addUserFavorite(item: any): Promise<void> {
+    return this.addVideoFavorite(item)
+  }
+
+  // 初始化方法
   async initializeDatabase(): Promise<void> {
-    try {
-      // 验证表是否可以正常访问
-      await this.getAllVideoHistory()
-      await this.getAllVideoFavorites()
-      console.log('[DatabaseService] 数据库初始化成功')
-    } catch (error) {
-      console.error('[DatabaseService] 数据库初始化失败:', error)
-      throw error
-    }
-  }
-
-  /**
-   * ========================
-   * 用户操作
-   * ========================
-   */
-
-  /**
-   * 根据 openid 获取用户历史记录
-   */
-  async getUserVideoHistory(openid: string, page: number = 1, pageSize: number = 10): Promise<{
-    list: VideoHistory[]
-    total: number
-    page: number
-    pageSize: number
-  }> {
-    const allHistory = await this.getAllVideoHistory()
-    const userHistory = allHistory.filter(item => item.openid === openid)
-    const total = userHistory.length
-    const start = (page - 1) * pageSize
-    const list = userHistory.slice(start, start + pageSize)
-
-    return { list, total, page, pageSize }
-  }
-
-  /**
-   * 根据 openid 获取用户收藏
-   */
-  async getUserVideoFavorites(openid: string, page: number = 1, pageSize: number = 10): Promise<{
-    list: VideoFavorites[]
-    total: number
-    page: number
-    pageSize: number
-  }> {
-    const allFavorites = await this.getAllVideoFavorites()
-    const userFavorites = allFavorites.filter(item => item.openid === openid)
-    const total = userFavorites.length
-    const start = (page - 1) * pageSize
-    const list = userFavorites.slice(start, start + pageSize)
-
-    return { list, total, page, pageSize }
-  }
-
-  /**
-   * 添加用户历史记录
-   */
-  async addUserVideoHistory(item: Omit<NewVideoHistory, 'id' | 'createdAt'> & { openid: string }): Promise<void> {
-    await this.addVideoHistory(item)
-  }
-
-  /**
-   * 添加用户收藏
-   */
-  async addUserVideoFavorite(item: Omit<NewVideoFavorites, 'id' | 'createdAt'> & { openid: string }): Promise<boolean> {
-    // 检查是否已存在
-    const existing = await db
-      .select()
-      .from(videoFavorites)
-      .where(eq(videoFavorites.videoUrl, item.videoUrl))
-      .limit(1)
-
-    if (existing.length > 0) {
-      // 如果已存在，删除
-      await this.removeVideoFavorite(item.videoUrl)
-      return false
-    }
-
-    const newItem: NewVideoFavorites = {
-      ...item,
-      id: `favorite_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      createdAt: new Date(),
-    }
-
-    await db.insert(videoFavorites).values(newItem)
-    return true
+    // 内存存储不需要初始化
   }
 }
