@@ -30,8 +30,11 @@ RUN npm install -g pnpm
 # 安装依赖（better-sqlite3 会自动编译）
 RUN pnpm install
 
-# 复制源代码和编译产物
+# 复制源代码
 COPY server/ ./server/
+
+# 安装 server 依赖并编译
+RUN cd server && pnpm install && pnpm build
 
 # 暴露端口
 EXPOSE 3000

@@ -48,6 +48,7 @@ interface PreviewData {
   script: string
   storyboard: StoryboardItem[]
   previewReady: boolean
+  videoUrl?: string // 预生成的视频URL（可选）
 }
 
 const IndexPage = () => {
@@ -264,7 +265,7 @@ const IndexPage = () => {
             sellingPoints: ['精选好物', '超值优惠']
           },
           script: response.data.copywriting || '欢迎光临！',
-          storyboard: uploadedImages.map((img: string, idx: number) => ({
+          storyboard: uploadedImages.map((_img: string, idx: number) => ({
             id: idx + 1,
             imageIndex: idx,
             duration: 2.4,
