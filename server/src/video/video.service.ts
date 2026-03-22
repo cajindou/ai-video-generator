@@ -210,10 +210,15 @@ export class VideoService {
     const fullCopywriting = await this.generateCopywriting(imageAnalysis);
     console.log('完整文案生成完成:', fullCopywriting);
 
-    // 步骤3: 使用 FFmpeg 一次性生成30秒完整视频（多图轮播）
-    console.log('步骤3: 使用 FFmpeg 一次性生成30秒完整视频...');
-    const finalVideoUrl = await this.generateCompleteVideoWithFeatures(imageUrls, fullCopywriting, features);
-    console.log('完整视频生成成功:', finalVideoUrl);
+    // 步骤3: 使用豆包 AI 生成视频（12秒竖屏）
+    console.log('步骤3: 使用豆包 AI 生成视频...');
+    const finalVideoUrl = await this.generateVideoDirect(
+      videoClient,
+      imageUrls,
+      fullCopywriting,
+      imageAnalysis
+    );
+    console.log('视频生成成功:', finalVideoUrl);
 
     // 提取店名（如果没有识别到，使用默认值）
     const storeName = imageAnalysis?.shopName || '未知店铺';
@@ -358,7 +363,7 @@ export class VideoService {
   }
 
   /**
-   * 生成完整视频 - 公开方法（支持功能配置）
+   * 生成完整视频 - 公开方法（使用豆包 AI）
    */
   async generateCompleteVideoPublic(
     imageUrls: string[], 
@@ -369,7 +374,59 @@ export class VideoService {
       audio?: boolean;
     }
   ): Promise<string> {
-    return await this.generateCompleteVideoWithFeatures(imageUrls, copywriting, features);
+    console.log('使用豆包 AI 生成视频...');
+    console.log('图片数量:', imageUrls.length);
+    console.log('文案:', copywriting.substring(0, 50) + '...');
+
+    // 将图片URL转换为Base64
+    const base64Images = await this.imageUrlsToBase64(imageUrls);
+    console.log('Base64转换成功，数量:', base64Images.length);
+
+    // 构建 content 数组
+    const contentItems: Content[] = [];
+
+    // 添加第一张图片作为 first_frame
+    contentItems.push({
+      type: 'image_url',
+      image_url: { url: base64Images[0] },
+      role: 'first_frame'
+    });
+
+    // 构建 prompt
+    const promptText = `Generate a 12-second professional shop exploration video.\n\n` +
+      `Visual References: ${base64Images.length} reference images showing shop sign, products, and layout.\n\n` +
+      `Presenter: Beautiful female Asian presenter (20-30 years old), MUST appear in ALL scenes.\n\n` +
+      `Audio Requirements:\n` +
+      `- Voice: "${copywriting}" (spoken by presenter, clear and energetic)\n` +
+      `- Background Music: High-energy, royalty-free, viral-style beats\n\n` +
+      `Quality: 720p HD, 9:16 vertical format, cinematic, dynamic camera movements.\n`;
+
+    contentItems.push({
+      type: 'text',
+      text: promptText
+    });
+
+    try {
+      const response = await this.videoGenerationClient.videoGeneration(contentItems, {
+        model: 'doubao-seedance-1-5-pro-251215',
+        duration: 12,
+        ratio: '9:16' as Ratio,
+        resolution: '720p' as Resolution,
+        generateAudio: true,
+        watermark: features?.watermark !== false,
+        maxWaitTime: 900
+      });
+
+      if (response.videoUrl) {
+        console.log('视频生成成功:', response.videoUrl);
+        return response.videoUrl;
+      } else {
+        throw new Error('视频生成未返回URL');
+      }
+    } catch (error) {
+      console.error('豆包 AI 视频生成失败:', error);
+      throw new Error(`视频生成失败: ${error.message}`);
+    }
   }
 
   /**
@@ -1828,6 +1885,7 @@ ${copywritingSegment}
 
   /**
    * 直接生成视频（使用 Base64 图片数据）
+   * AI 智能分析所有图片，自动选择最佳首帧和分配展示内容
    */
   private async generateVideoDirect(
     videoClient: VideoGenerationClient,
@@ -1835,215 +1893,260 @@ ${copywritingSegment}
     copywriting: string,
     imageAnalysis: any
   ): Promise<string> {
-    console.log('开始生成视频...');
+    console.log('开始生成视频（智能图片分析模式）...');
 
     // 将所有图片URL转换为Base64
     const base64Images = await this.imageUrlsToBase64(imageUrls);
-
     console.log('Base64转换成功，数量:', base64Images.length);
 
-    // 生成基于所有图片的场景描述，确保视频与图片高度一致
-    console.log('生成场景描述...');
-    const sceneDescriptions = await this.generateSceneDescriptions(base64Images);
-    console.log('场景描述生成完成，数量:', sceneDescriptions.length);
+    // 🎯 核心改进：AI 智能分析每张图片，选择最佳首帧
+    console.log('步骤A: AI 智能分析所有图片...');
+    const imageAnalysisResult = await this.intelligentImageAnalysis(base64Images);
+    console.log('图片分析结果:', JSON.stringify(imageAnalysisResult, null, 2));
+
+    // 选择最佳首帧图片
+    const bestFirstFrameIndex = imageAnalysisResult.bestFirstFrameIndex;
+    const bestFirstFrame = base64Images[bestFirstFrameIndex];
+    console.log(`选择第 ${bestFirstFrameIndex + 1} 张图片作为首帧，原因: ${imageAnalysisResult.images[bestFirstFrameIndex].reason}`);
 
     // 构建 content 数组
     const contentItems: Content[] = [];
 
-    // CRITICAL: doubao-seedance-1-5-pro-251215 只支持 first_frame 和 last_frame
-    // 不支持 reference_image！所以只能使用一张图片作为 first_frame
-    // 其他图片的信息通过文本描述传达
-    
-    // 添加第一张图片作为 first_frame（使用第一张通常是门头招牌）
+    // 添加智能选择的首帧图片
     contentItems.push({
       type: 'image_url',
-      image_url: { url: base64Images[0] },
+      image_url: { url: bestFirstFrame },
       role: 'first_frame'
     });
 
-    // 视觉参考 - 通过文本描述传达所有图片的信息
-    let promptText = `Visual References and Shop Information:\n`;
-    promptText += `You have ${base64Images.length} reference images of a real shop. These images show the exact shop sign, core products, and store layout that MUST be perfectly reproduced in the generated video.\n\n`;
-    promptText += `IMPORTANT: You must reference ALL ${base64Images.length} images throughout the video to ensure consistency.\n\n`;
-    promptText += `The shop details from image analysis are:\n`;
-    promptText += `- Shop Name: This is a real shop with specific branding\n`;
-    promptText += `- Brand Elements: Must include exact shop sign design, logo, colors, typography\n`;
-    promptText += `- Layout: Must match the actual store spatial arrangement and flow\n`;
-    promptText += `- Products: Must show the exact core products on display in the images\n`;
-    promptText += `- Decorations: Must replicate the real interior design and ambiance\n\n`;
+    // 构建智能化的 prompt，包含每张图片的详细分析
+    let promptText = `🎬 INTELLIGENT VIDEO GENERATION REQUEST\n\n`;
+    
+    // 图片分析摘要
+    promptText += `📷 IMAGE ANALYSIS SUMMARY:\n`;
+    promptText += `Total images: ${base64Images.length}\n`;
+    promptText += `First frame selected: Image ${bestFirstFrameIndex + 1} (${imageAnalysisResult.images[bestFirstFrameIndex].type})\n`;
+    promptText += `Reason: ${imageAnalysisResult.images[bestFirstFrameIndex].reason}\n\n`;
 
-    // 强制一致性要求（CRITICAL）
-    promptText += `CRITICAL CONSISTENCY REQUIREMENTS (MUST FOLLOW):\n`;
-    promptText += `- Shop Sign: The shop sign MUST appear in ALL scenes exactly as shown in the reference images\n`;
-    promptText += `- Core Products: Products on display MUST match what's shown in the reference images\n`;
-    promptText += `- Store Layout: Interior space arrangement MUST be consistent with reference images\n`;
-    promptText += `- No Invented Elements: Do NOT add elements that don't exist in the reference images\n`;
-    promptText += `- Realistic Appearance: Shop environment must look like a real, operational business\n\n`;
+    // 详细描述每张图片的内容和展示建议
+    promptText += `📋 DETAILED IMAGE BREAKDOWN:\n`;
+    for (let i = 0; i < imageAnalysisResult.images.length; i++) {
+      const img = imageAnalysisResult.images[i];
+      promptText += `\n[Image ${i + 1}] ${img.type.toUpperCase()}\n`;
+      promptText += `- Content: ${img.description}\n`;
+      promptText += `- Key Elements: ${img.keyElements.join(', ')}\n`;
+      promptText += `- Showcase Suggestion: ${img.showcaseSuggestion}\n`;
+      promptText += `- Emotional Impact: ${img.emotionalImpact}\n`;
+    }
 
-    // CRITICAL: 摄像机运动和物理逻辑（防止穿越物体）
-    promptText += `CRITICAL: CAMERA MOVEMENT AND PHYSICS (MUST FOLLOW):\n`;
-    promptText += `- **NO CROSSING OBJECTS**: Camera MUST NOT pass through walls, doors, furniture, or any solid objects\n`;
-    promptText += `- **NO GOING THROUGH OBSTACLES**: Camera movement must respect physical barriers and spatial constraints\n`;
-    promptText += `- **REALISTIC PATH**: Camera should move through open spaces (aisles, walkways, entrances), not through walls or obstacles\n`;
-    promptText += `- **RESPECT DEPTH**: When zooming or tracking, camera should move around objects, not through them\n`;
-    promptText += `- **DOOR PROTOCOL**: When showing interior, camera should enter through open doors/gates, not through closed walls\n`;
-    promptText += `- **SPATIAL AWARENESS**: Maintain clear separation between camera and shop elements, no merging or intersecting\n`;
-    promptText += `- **PHYSICS COMPLIANCE**: All camera movements must follow real-world physics - no impossible transitions or shortcuts\n\n`;
+    // 视频场景分配
+    promptText += `\n\n🎞️ SCENE ALLOCATION (12 seconds total):\n`;
+    const scenes = this.generateSceneAllocation(imageAnalysisResult, copywriting);
+    for (const scene of scenes) {
+      promptText += `- ${scene.timeRange}: ${scene.description}\n`;
+    }
 
-    promptText += `Examples of INCORRECT camera movements (DO NOT DO):\n`;
-    promptText += `- Camera panning through a wall or glass window to show interior\n`;
-    promptText += `- Camera moving through a closed door without opening it\n`;
-    promptText += `- Camera passing through furniture, shelves, or display counters\n`;
-    promptText += `- Camera zooming through solid objects like a ghost\n\n`;
-
-    promptText += `Examples of CORRECT camera movements (DO THIS):\n`;
-    promptText += `- Camera entering shop entrance, moving through open doorway naturally\n`;
-    promptText += `- Camera panning around open spaces (aisles, corridors)\n`;
-    promptText += `- Camera moving around obstacles (shelves, displays) by going around them\n`;
-    promptText += `- Camera tracking the presenter through walkable paths\n\n`;
-
-    // 美女主播要求（全程露脸 + 互动）
-    promptText += `Presenter Requirements:\n`;
-    promptText += `- Beautiful female presenter (Asian, 20-30 years old)\n`;
-    promptText += `- MUST appear in ALL scenes throughout the entire video\n`;
-    promptText += `- Always facing the camera while speaking\n`;
-    promptText += `- Interacts naturally with shop elements (points to menu, touches products)\n`;
-    promptText += `- Natural gestures and facial expressions\n`;
-    promptText += `- Energetic, professional, trustworthy demeanor\n\n`;
-
-    // 场景描述（根据图片数量）
-    promptText += `Scene Descriptions (12-second video):\n`;
-    promptText += `Scene 1 (0-3 seconds): Beautiful presenter stands at shop entrance, introduces shop with energy (music intro)\n`;
-    promptText += `Scene 2 (3-6 seconds): Presenter walks into store, showcases interior layout and atmosphere (music builds up)\n`;
-    promptText += `Scene 3 (6-9 seconds): Presenter highlights core products with close-up shots (music climax - MOST IMPACTFUL)\n`;
-    promptText += `Scene 4 (9-12 seconds): Presenter at exit or counter, final call-to-action (music outro)\n\n`;
-
-    // 画质和运镜（电影级）
-    promptText += `Visual Quality:\n`;
+    // 智能化要求
+    promptText += `\n\n🎯 SMART REQUIREMENTS:\n`;
+    promptText += `1. CONTENT MATCHING: Each scene MUST match the corresponding image content\n`;
+    promptText += `2. FIRST FRAME: Start with the selected image (${imageAnalysisResult.images[bestFirstFrameIndex].type})\n`;
+    promptText += `3. TRANSITION: Natural flow between different image contents\n`;
+    promptText += `4. PRESENTER: Beautiful Asian female (20-30yo), appearing in ALL scenes\n`;
+    promptText += `5. AUDIO: Voice saying "${copywriting.substring(0, 100)}${copywriting.length > 100 ? '...' : ''}"\n`;
+    
+    // 视觉质量
+    promptText += `\n\n✨ VISUAL QUALITY:\n`;
     promptText += `- 720p HD, 9:16 vertical format\n`;
-    promptText += `- Dynamic camera movements: push-in, slow zoom, smooth tracking\n`;
-    promptText += `- Professional color grading with vibrant colors and high contrast\n`;
-    promptText += `- Smooth transitions between scenes (fade, dissolve, match cut)\n`;
-    promptText += `- Cinematic depth of field, sharp focus on presenter\n`;
-    promptText += `- Natural lighting with realistic shadows\n`;
-    promptText += `- Perfect lighting on presenter's face, natural colors, 720p clarity\n`;
-    promptText += `- Seamless transitions, no cuts, motion blur 15px\n`;
-    promptText += `- 9:16 aspect ratio for mobile\n\n`;
+    promptText += `- Cinematic color grading, vibrant colors\n`;
+    promptText += `- Dynamic camera movements (push-in, tracking)\n`;
+    promptText += `- Professional lighting, realistic shadows\n`;
+    promptText += `- Smooth transitions, no cuts\n`;
 
-    // 音频要求（专业级+热点音乐+无版权）
-    promptText += `Audio Requirements:\n`;
-    promptText += `- Voice: "${copywriting}" (spoken by the beautiful female presenter in the video, clear and energetic)\n`;
-    promptText += `- Background Music (CRITICAL):\n`;
-    promptText += `  * Rhythm: Strong, catchy drum beats or electronic beats with distinct rhythm\n`;
-    promptText += `  * Viral/Hot Property: Trending music similar to viral TikTok/Douyin/Reels/Shorts clips\n`;
-    promptText += `  * Emotion: High-energy, dynamic, upbeat commercial style matching shop exploration\n`;
-    promptText += `  * Duration: Exactly 12 seconds, with a complete climax or memorable hook\n`;
-    promptText += `  * Copyright: MUST be royalty-free, no copyright risk, safe for commercial use\n`;
-    promptText += `- Sound Effects: Bass drops and impact beats synchronized with video transitions\n`;
-    promptText += `- Pro Mixing: Voice (70%) + Background Music (25%) + Sound Effects (5%), balanced for maximum impact\n\n`;
-
-    // 质量标准（视觉炸裂+电影级质感+顶级音乐）
-    promptText += `Quality:\n`;
-    promptText += `- High-energy, trustworthy, authentic, cinematic\n`;
-    promptText += `- Dynamic pacing, perfect timing, explosive visual impact\n`;
-    promptText += `- Real shop environment, realistic with professional polish\n`;
-    promptText += `- Beautiful female presenter MUST appear in ALL scenes, facing camera while speaking\n`;
-    promptText += `- Shop sign, core products, and store layout MUST remain consistent throughout\n`;
-    promptText += `- Maximum visual impact: dynamic camera movements, neon colors, professional presenter\n`;
-    promptText += `- Top-tier music: Strong rhythm, viral/hot property, copyright-free, perfectly synchronized with video\n`;
-    promptText += `- Movie-grade quality, 12-second perfection with viral music hook\n`;
-
-    // 添加唯一的文本描述
     contentItems.push({
       type: 'text',
       text: promptText
     });
 
+    console.log('智能 Prompt 构建完成，开始调用视频生成 API...');
+
     try {
-      console.log('调用视频生成API，参数:', {
+      const response = await this.videoGenerationClient.videoGeneration(contentItems, {
         model: 'doubao-seedance-1-5-pro-251215',
         duration: 12,
-        ratio: '9:16',
-        resolution: '720p',
+        ratio: '9:16' as Ratio,
+        resolution: '720p' as Resolution,
         generateAudio: true,
         watermark: false,
-        firstFrameSize: base64Images[0].length,
-        imageCount: base64Images.length
+        maxWaitTime: 900
       });
 
-      // 使用 SDK 的 VideoGenerationClient 生成视频
-      try {
-        console.log('使用 SDK 生成视频...');
-        
-        const response = await this.videoGenerationClient.videoGeneration(contentItems, {
-          model: 'doubao-seedance-1-5-pro-251215',
-          duration: 12,
-          ratio: '9:16' as Ratio,
-          resolution: '720p' as Resolution,
-          generateAudio: true,
-          watermark: false,
-          maxWaitTime: 900 // 15分钟
-        });
-
-        console.log('SDK 响应:', {
-          videoUrl: response.videoUrl,
-          id: response.response?.id,
-          status: response.response?.status
-        });
-
-        if (response.videoUrl) {
-          console.log('视频生成成功，URL:', response.videoUrl);
-          return response.videoUrl;
-        } else {
-          console.error('视频生成未返回URL，响应:', response);
-          throw new Error('视频生成未返回URL');
-        }
-      } catch (sdkError) {
-        console.error('SDK 调用失败:', sdkError);
-        
-        // SDK 调用失败时，打印详细错误信息
-        if (sdkError.response) {
-          console.error('SDK 错误响应:', {
-            status: sdkError.response.status,
-            statusText: sdkError.response.statusText,
-            data: sdkError.response.data,
-            headers: sdkError.response.headers
-          });
-        }
-        
-        throw sdkError;
+      if (response.videoUrl) {
+        console.log('视频生成成功:', response.videoUrl);
+        return response.videoUrl;
+      } else {
+        throw new Error('视频生成未返回URL');
       }
     } catch (error) {
-      console.error('生成视频失败:', error);
-      
-      // 检查是否是 ModelNotOpen 错误（模型未开通）
-      if (error.response?.data?.code === 'ModelNotOpen' || 
-          error.message?.includes('ModelNotOpen') ||
-          error.code === 'ModelNotOpen') {
-        const errorMessage = error.response?.data?.message || error.message || '';
-        console.error('模型未开通错误:', errorMessage);
-        throw new Error(
-          '视频生成服务未开通。请在火山引擎控制台开通 doubao-seedance-1-5-pro-251215 视频生成服务。\n' +
-          '开通地址：https://console.volcengine.com/ark\n' +
-          '步骤：人工智能 > 大模型推理服务 > 搜索 doubao-seedance-1-5-pro-251215 > 开通服务\n\n' +
-          '提示：当前功能已支持图片分析和文案生成，您可以先体验这些功能。'
-        );
-      }
-      
-      if (axios.isAxiosError(error)) {
-        console.error('Axios 错误详情:', {
-          status: error.response?.status,
-          statusText: error.response?.statusText,
-          data: error.response?.data,
-          headers: error.response?.headers
-        });
-      }
+      console.error('视频生成失败:', error);
       throw error;
     }
   }
 
   /**
+   * 🧠 AI 智能分析所有图片
+   * 自动识别每张图片的内容类型、关键元素，并选择最佳首帧
+   */
+  private async intelligentImageAnalysis(base64Images: string[]): Promise<{
+    images: Array<{
+      type: string;
+      description: string;
+      keyElements: string[];
+      showcaseSuggestion: string;
+      emotionalImpact: string;
+      firstFrameScore: number;
+      reason: string;
+    }>;
+    bestFirstFrameIndex: number;
+    overallStory: string;
+  }> {
+    console.log('开始智能图片分析...');
+
+    const imageContents = base64Images.map((base64, index) => ({
+      type: 'image_url' as const,
+      image_url: { url: base64 }
+    }));
+
+    const prompt = `You are an expert video director and image analyst. Analyze ALL ${base64Images.length} images and provide detailed insights.
+
+For EACH image, identify:
+1. **Image Type**: What category does this image belong to?
+   - "ENTRANCE" (门头/入口): Shop exterior, sign, entrance
+   - "PRODUCT" (产品): Core products, food, merchandise
+   - "INTERIOR" (环境/内景): Store layout, seating, decoration
+   - "DETAIL" (细节): Close-up, texture, special features
+   - "PEOPLE" (人物): Staff, customers, atmosphere
+
+2. **Description**: Brief description of what's shown (2-3 sentences)
+
+3. **Key Elements**: List 3-5 important visual elements (signs, products, colors, etc.)
+
+4. **Showcase Suggestion**: How should this be presented in a video? (camera angle, movement, timing)
+
+5. **Emotional Impact**: What emotion does this image evoke? (excitement, warmth, curiosity, etc.)
+
+6. **First Frame Score** (0-100): How suitable is this as the opening shot?
+   - Higher score = better first frame (clear identity, inviting, memorable)
+   - Consider: visibility of shop name, visual appeal, curiosity factor
+
+7. **Reason**: Why did you give this first frame score?
+
+Finally, select the BEST first frame image and explain your choice.
+
+Return JSON format:
+{
+  "images": [
+    {
+      "type": "ENTRANCE|PRODUCT|INTERIOR|DETAIL|PEOPLE",
+      "description": "...",
+      "keyElements": ["element1", "element2", "element3"],
+      "showcaseSuggestion": "...",
+      "emotionalImpact": "...",
+      "firstFrameScore": 85,
+      "reason": "..."
+    }
+  ],
+  "bestFirstFrameIndex": 0,
+  "overallStory": "A brief narrative of how these images tell a story together"
+}`;
+
+    try {
+      const response = await axios.post(
+        `${this.baseUrl}/api/v3/chat/completions`,
+        {
+          model: 'doubao-seed-2-0-pro-260215',
+          messages: [
+            {
+              role: 'user',
+              content: [
+                { type: 'text', text: prompt },
+                ...imageContents
+              ]
+            }
+          ],
+          temperature: 0.3
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json'
+          },
+          timeout: 120000
+        }
+      );
+
+      const content = response.data?.choices?.[0]?.message?.content;
+      if (!content) {
+        throw new Error('AI 分析返回内容为空');
+      }
+
+      // 解析 JSON
+      const analysisText = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      const result = JSON.parse(analysisText);
+      
+      console.log('智能图片分析完成');
+      return result;
+
+    } catch (error) {
+      console.error('智能图片分析失败，使用默认策略:', error);
+      
+      // 降级策略：按顺序评分
+      const defaultResult = {
+        images: base64Images.map((_, index) => ({
+          type: index === 0 ? 'ENTRANCE' : index === 1 ? 'PRODUCT' : 'INTERIOR',
+          description: `Image ${index + 1}`,
+          keyElements: ['shop', 'product', 'interior'],
+          showcaseSuggestion: 'Standard presentation',
+          emotionalImpact: 'Neutral',
+          firstFrameScore: index === 0 ? 90 : 70 - index * 10,
+          reason: index === 0 ? 'First image, likely entrance' : `Image ${index + 1}`
+        })),
+        bestFirstFrameIndex: 0,
+        overallStory: 'Shop exploration video'
+      };
+      
+      return defaultResult;
+    }
+  }
+
+  /**
+   * 根据图片分析结果生成场景分配
+   */
+  private generateSceneAllocation(
+    imageAnalysis: any,
+    copywriting: string
+  ): Array<{ timeRange: string; description: string }> {
+    const scenes: Array<{ timeRange: string; description: string }> = [];
+    const images = imageAnalysis.images;
+    const duration = 12; // 总时长12秒
+    const timePerScene = duration / images.length;
+
+    for (let i = 0; i < images.length; i++) {
+      const startTime = i * timePerScene;
+      const endTime = (i + 1) * timePerScene;
+      const img = images[i];
+
+      scenes.push({
+        timeRange: `${startTime.toFixed(1)}s-${endTime.toFixed(1)}s`,
+        description: `[${img.type}] ${img.showcaseSuggestion}`
+      });
+    }
+
+    return scenes;
+  }
+
+  /**
    * 直接生成视频（支持 callbackUrl 的异步版本）
+   * 同样使用智能图片分析
    */
   private async generateVideoDirectAsync(
     videoClient: VideoGenerationClient,
@@ -2052,175 +2155,72 @@ ${copywritingSegment}
     imageAnalysis: any,
     callbackUrl?: string
   ): Promise<string> {
-    console.log('开始生成视频（异步模式）...');
+    console.log('开始生成视频（异步模式，智能图片分析）...');
 
     // 将所有图片URL转换为Base64
     const base64Images = await this.imageUrlsToBase64(imageUrls);
-
     console.log('Base64转换成功，数量:', base64Images.length);
 
-    // 生成基于所有图片的场景描述，确保视频与图片高度一致
-    console.log('生成场景描述...');
-    const sceneDescriptions = await this.generateSceneDescriptions(base64Images);
-    console.log('场景描述生成完成，数量:', sceneDescriptions.length);
+    // 🎯 智能图片分析
+    console.log('AI 智能分析所有图片...');
+    const imageAnalysisResult = await this.intelligentImageAnalysis(base64Images);
+    
+    // 选择最佳首帧图片
+    const bestFirstFrameIndex = imageAnalysisResult.bestFirstFrameIndex;
+    const bestFirstFrame = base64Images[bestFirstFrameIndex];
+    console.log(`选择第 ${bestFirstFrameIndex + 1} 张图片作为首帧`);
 
     // 构建 content 数组
     const contentItems: Content[] = [];
 
-    // CRITICAL: doubao-seedance-1-5-pro-251215 只支持 first_frame 和 last_frame
-    // 不支持 reference_image！所以只能使用一张图片作为 first_frame
-    // 其他图片的信息通过文本描述传达
-    
-    // 添加第一张图片作为 first_frame（使用第一张通常是门头招牌）
+    // 添加智能选择的首帧图片
     contentItems.push({
       type: 'image_url',
-      image_url: { url: base64Images[0] },
+      image_url: { url: bestFirstFrame },
       role: 'first_frame'
     });
 
-    // 视觉参考 - 通过文本描述传达所有图片的信息
-    let promptText = `Visual References and Shop Information:\n`;
-    promptText += `You have ${base64Images.length} reference images of a real shop. These images show the exact shop sign, core products, and store layout that MUST be perfectly reproduced in the generated video.\n\n`;
-    promptText += `IMPORTANT: You must reference ALL ${base64Images.length} images throughout the video to ensure consistency.\n\n`;
+    // 构建智能化的 prompt
+    let promptText = `🎬 INTELLIGENT VIDEO GENERATION (ASYNC MODE)\n\n`;
+    promptText += `📷 Selected first frame: Image ${bestFirstFrameIndex + 1} (${imageAnalysisResult.images[bestFirstFrameIndex].type})\n`;
+    promptText += `Reason: ${imageAnalysisResult.images[bestFirstFrameIndex].reason}\n\n`;
+    
+    promptText += `📋 IMAGE CONTENT:\n`;
+    for (let i = 0; i < imageAnalysisResult.images.length; i++) {
+      const img = imageAnalysisResult.images[i];
+      promptText += `[${i + 1}] ${img.type}: ${img.description}\n`;
+    }
 
-    // 强制一致性要求（CRITICAL）
-    promptText += `CRITICAL CONSISTENCY REQUIREMENTS (MUST FOLLOW):\n`;
-    promptText += `- Shop Sign: The shop sign MUST appear in ALL scenes exactly as shown in the reference images\n`;
-    promptText += `- Core Products: Products on display MUST match what's shown in the reference images\n`;
-    promptText += `- Store Layout: Interior space arrangement MUST be consistent with reference images\n`;
-    promptText += `- No Invented Elements: Do NOT add elements that don't exist in the reference images\n`;
-    promptText += `- Realistic Appearance: Shop environment must look like a real, operational business\n\n`;
+    promptText += `\n🎯 REQUIREMENTS:\n`;
+    promptText += `- Presenter: Beautiful Asian female (20-30yo) in ALL scenes\n`;
+    promptText += `- Audio: Voice saying "${copywriting.substring(0, 80)}..."\n`;
+    promptText += `- Quality: 720p HD, 9:16 vertical, cinematic\n`;
 
-    // 美女主播要求（全程露脸 + 互动）
-    promptText += `Presenter Requirements:\n`;
-    promptText += `- Beautiful female presenter (Asian, 20-30 years old)\n`;
-    promptText += `- MUST appear in ALL scenes throughout the entire video\n`;
-    promptText += `- Always facing the camera while speaking\n`;
-    promptText += `- Interacts naturally with shop elements (points to menu, touches products)\n`;
-    promptText += `- Natural gestures and facial expressions\n`;
-    promptText += `- Energetic, professional, trustworthy demeanor\n\n`;
-
-    // 场景描述（根据图片数量）
-    promptText += `Scene Descriptions (12-second video):\n`;
-    promptText += `Scene 1 (0-3 seconds): Beautiful presenter stands at shop entrance, introduces shop with energy (music intro)\n`;
-    promptText += `Scene 2 (3-6 seconds): Presenter walks into store, showcases interior layout and atmosphere (music builds up)\n`;
-    promptText += `Scene 3 (6-9 seconds): Presenter highlights core products with close-up shots (music climax - MOST IMPACTFUL)\n`;
-    promptText += `Scene 4 (9-12 seconds): Presenter at exit or counter, final call-to-action (music outro)\n\n`;
-
-    // 画质和运镜（电影级）
-    promptText += `Visual Quality:\n`;
-    promptText += `- 720p HD, 9:16 vertical format\n`;
-    promptText += `- Dynamic camera movements: push-in, slow zoom, smooth tracking\n`;
-    promptText += `- Professional color grading with vibrant colors and high contrast\n`;
-    promptText += `- Smooth transitions between scenes (fade, dissolve, match cut)\n`;
-    promptText += `- Cinematic depth of field, sharp focus on presenter\n`;
-    promptText += `- Natural lighting with realistic shadows\n`;
-    promptText += `- Perfect lighting on presenter's face, natural colors, 720p clarity\n`;
-    promptText += `- Seamless transitions, no cuts, motion blur 15px\n`;
-    promptText += `- 9:16 aspect ratio for mobile\n\n`;
-
-    // 音频要求（专业级+热点音乐+无版权）
-    promptText += `Audio Requirements:\n`;
-    promptText += `- Voice: "${copywriting}" (spoken by the beautiful female presenter in the video, clear and energetic)\n`;
-    promptText += `- Background Music (CRITICAL):\n`;
-    promptText += `  * Rhythm: Strong, catchy drum beats or electronic beats with distinct rhythm\n`;
-    promptText += `  * Viral/Hot Property: Trending music similar to viral TikTok/Douyin/Reels/Shorts clips\n`;
-    promptText += `  * Emotion: High-energy, dynamic, upbeat commercial style matching shop exploration\n`;
-    promptText += `  * Duration: Exactly 12 seconds, with a complete climax or memorable hook\n`;
-    promptText += `  * Copyright: MUST be royalty-free, no copyright risk, safe for commercial use\n`;
-    promptText += `- Sound Effects: Bass drops and impact beats synchronized with video transitions\n`;
-    promptText += `- Pro Mixing: Voice (70%) + Background Music (25%) + Sound Effects (5%), balanced for maximum impact\n\n`;
-
-    // 质量标准（视觉炸裂+电影级质感+顶级音乐）
-    promptText += `Quality:\n`;
-    promptText += `- High-energy, trustworthy, authentic, cinematic\n`;
-    promptText += `- Dynamic pacing, perfect timing, explosive visual impact\n`;
-    promptText += `- Real shop environment, realistic with professional polish\n`;
-    promptText += `- Beautiful female presenter MUST appear in ALL scenes, facing camera while speaking\n`;
-    promptText += `- Shop sign, core products, and store layout MUST remain consistent throughout\n`;
-    promptText += `- Maximum visual impact: dynamic camera movements, neon colors, professional presenter\n`;
-    promptText += `- Top-tier music: Strong rhythm, viral/hot property, copyright-free, perfectly synchronized with video\n`;
-    promptText += `- Movie-grade quality, 12-second perfection with viral music hook\n`;
-
-    // 添加唯一的文本描述
     contentItems.push({
       type: 'text',
       text: promptText
     });
 
     try {
-      console.log('调用视频生成API（异步模式），参数:', {
+      const response = await videoClient.videoGeneration(contentItems, {
         model: 'doubao-seedance-1-5-pro-251215',
         duration: 12,
-        ratio: '9:16',
-        resolution: '720p',
+        ratio: '9:16' as Ratio,
+        resolution: '720p' as Resolution,
         generateAudio: true,
         watermark: false,
         callbackUrl: callbackUrl,
-        firstFrameSize: base64Images[0].length,
-        imageCount: base64Images.length
+        maxWaitTime: 900
       });
 
-      // 使用 first_frame 模式，支持 duration 参数
-      const options = {
-        model: 'doubao-pro-video',
-        duration: 12, // 视频生成时长（模型单片段最大12秒，可通过生成多个片段拼接达到更长时长）
-        ratio: '9:16' as Ratio, // 竖屏视频，适合短视频平台
-        resolution: '720p' as Resolution,
-        generateAudio: true, // 启用音频生成（口播、音乐、音效）
-        watermark: false,
-        callbackUrl: callbackUrl, // 异步回调URL
-        maxWaitTime: 30 // 异步模式下等待时间可以更短
-      };
-
-      // 异步模式：不等待完成，立即返回任务ID
-      const response = await videoClient.videoGeneration(contentItems, options);
-
-      console.log('视频生成任务已创建:', response.response.id);
-      console.log('任务状态:', response.response.status);
-
-      // 如果是异步模式，response.videoUrl 可能为 null，需要通过回调获取
-      // 但 SDK 可能已经实现了轮询，所以我们也等待完成
       if (response.videoUrl) {
-        console.log('视频生成成功（同步返回）:', response.videoUrl);
+        console.log('视频生成成功:', response.videoUrl);
         return response.videoUrl;
       } else {
-        // 异步模式，等待轮询完成
-        console.log('视频生成中，等待轮询...');
-        
-        // SDK 内部会自动轮询，最多等待 maxWaitTime
-        // 如果超时仍未完成，抛出错误
-        const maxPollingAttempts = 60; // 最多轮询60次
-        let pollingCount = 0;
-
-        while (pollingCount < maxPollingAttempts) {
-          await this.sleep(1000); // 等待1秒
-          pollingCount++;
-
-          // 这里应该调用任务查询接口，但 SDK 没有暴露
-          // 所以我们只能等待 SDK 内部轮询完成
-          console.log(`轮询中... ${pollingCount}/${maxPollingAttempts}`);
-        }
-
-        throw new Error('视频生成超时，请稍后查看任务状态');
+        throw new Error('视频生成未返回URL');
       }
     } catch (error) {
-      console.error('生成视频失败:', error);
-      
-      // 检查是否是 ModelNotOpen 错误（模型未开通）
-      if (error.response?.data?.code === 'ModelNotOpen' || 
-          error.message?.includes('ModelNotOpen') ||
-          error.code === 'ModelNotOpen') {
-        const errorMessage = error.response?.data?.message || error.message || '';
-        console.error('模型未开通错误:', errorMessage);
-        throw new Error(
-          '视频生成服务未开通。请在火山引擎控制台开通 doubao-seedance-1-5-pro-251215 视频生成服务。\n' +
-          '开通地址：https://console.volcengine.com/ark\n' +
-          '步骤：人工智能 > 大模型推理服务 > 搜索 doubao-seedance-1-5-pro-251215 > 开通服务\n\n' +
-          '提示：当前功能已支持图片分析和文案生成，您可以先体验这些功能。'
-        );
-      }
-      
+      console.error('异步视频生成失败:', error);
       throw error;
     }
   }
