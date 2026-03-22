@@ -1,0 +1,448 @@
+/* 发现页面样式 - 复用基础科技样式 */
+.tech-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 基础背景 */
+.tech-bg,
+.tech-particles,
+.tech-spin,
+.tech-safe-area {
+  /* 复用首页样式 */
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(168, 85, 247, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.tech-particles {
+  background-image: 
+    radial-gradient(circle, rgba(139, 92, 246, 0.2) 1px, transparent 1px),
+    radial-gradient(circle, rgba(99, 102, 241, 0.2) 1px, transparent 1px);
+  background-size: 50px 50px, 30px 30px;
+  background-position: 0 0, 25px 25px;
+  animation: techFloat 20s linear infinite;
+}
+
+@keyframes techFloat {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-50px); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.tech-safe-area {
+  height: env(safe-area-inset-bottom);
+  display: none;
+}
+
+/* 顶部标题栏 */
+.tech-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 16px 16px;
+  background: rgba(26, 26, 46, 0.8);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.tech-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%);
+  border-radius: 12px;
+  margin-right: 12px;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.tech-title {
+  font-size: 20px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.tech-filter-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 12px;
+}
+
+/* 分类标签栏 */
+.tech-tab-bar {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  margin-bottom: 20px;
+  gap: 8px;
+}
+
+.tech-tab-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px;
+  background: rgba(139, 92, 246, 0.05);
+  border: 1px solid rgba(139, 92, 246, 0.15);
+  border-radius: 24px;
+  transition: all 0.3s;
+}
+
+.tech-tab-active {
+  background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%);
+  border-color: #8B5CF6;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.tech-tab-icon {
+  display: flex;
+  align-items: center;
+}
+
+.tech-tab-text {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 600;
+}
+
+.tech-tab-active .tech-tab-text {
+  color: #fff;
+}
+
+/* 主内容区 */
+.tech-content {
+  padding: 0 16px;
+  min-height: calc(100vh - 80px);
+}
+
+/* 区域标题 */
+.tech-section {
+  margin-bottom: 24px;
+}
+
+.tech-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.tech-section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  margin-left: 8px;
+}
+
+.tech-section-more {
+  font-size: 14px;
+  color: #8B5CF6;
+}
+
+/* 视频卡片 */
+.tech-video-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.tech-video-card {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%);
+  border: 1px solid rgba(139, 92, 246, 0.1);
+  border-radius: 20px;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.1);
+}
+
+/* 视频封面 */
+.tech-video-cover {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  overflow: hidden;
+}
+
+.tech-cover-image {
+  width: 100%;
+  height: 100%;
+}
+
+.tech-play-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(2px);
+}
+
+.tech-video-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  z-index: 10;
+}
+
+.tech-video-badge-hot {
+  background: linear-gradient(135deg, #EF4444 0%, #F59E0B 100%);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.tech-badge-text {
+  font-size: 12px;
+  color: #fff;
+  font-weight: 700;
+}
+
+.tech-video-info {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tech-views-text,
+.tech-time-text {
+  font-size: 12px;
+  color: #fff;
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* 视频详情 */
+.tech-video-details {
+  padding: 16px;
+}
+
+.tech-video-title {
+  display: block;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.tech-video-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.tech-author-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid rgba(139, 92, 246, 0.3);
+}
+
+.tech-author-name {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.tech-category-tag {
+  padding: 4px 12px;
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 20px;
+  font-size: 12px;
+  color: #8B5CF6;
+  font-weight: 600;
+}
+
+.tech-views-badge {
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* 操作按钮 */
+.tech-video-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.tech-action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 12px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  transition: all 0.3s;
+}
+
+.tech-action-btn::after {
+  border: none;
+}
+
+.tech-action-text {
+  font-size: 14px;
+}
+
+/* 空状态 */
+.tech-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+}
+
+.tech-empty-title {
+  display: block;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  margin-top: 20px;
+  margin-bottom: 8px;
+}
+
+.tech-empty-desc {
+  display: block;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 24px;
+}
+
+.tech-empty-btn {
+  padding: 12px 32px;
+  background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%);
+  border-radius: 24px;
+  border: none;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+/* 加载更多 */
+.tech-load-more {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  gap: 12px;
+}
+
+.tech-loading-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.tech-dot {
+  width: 8px;
+  height: 8px;
+  background: #8B5CF6;
+  border-radius: 50%;
+  animation: techDotPulse 1.4s ease-in-out infinite;
+}
+
+.tech-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.tech-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes techDotPulse {
+  0%, 80%, 100% {
+    transform: scale(0.6);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.tech-load-more-text {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* 辅助类 */
+.flex {
+  display: flex;
+}
+
+.flex-row {
+  flex-direction: row;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.gap-1 {
+  gap: 4px;
+}
+
+.gap-2 {
+  gap: 8px;
+}
+
+/* 隐藏滚动条 */
+.tech-content::-webkit-scrollbar {
+  display: none;
+}
+
+.tech-content {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

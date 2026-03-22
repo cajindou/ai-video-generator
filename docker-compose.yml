@@ -1,0 +1,18 @@
+services:
+  ai-video-generator:
+    build: .
+    container_name: ai-video-generator
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - COZE_WORKLOAD_IDENTITY_API_KEY=67e98ac0-e718-4776-8193-98af51499943
+      - COZE_API_BASE_URL=https://ark.cn-beijing.volces.com
+      - COZE_MODEL_BASE_URL=https://ark.cn-beijing.volces.com/api/v3
+      - DATABASE_PATH=/tmp/coze-mini-program.db
+      - UPLOAD_DIR=/app/uploads
+      - WECHAT_APP_ID=wx4b20891170ea8803
+      - WECHAT_APP_SECRET=3d5e2a08eb18366ff84c2a75d5434443
+    volumes:
+      - ./uploads:/app/uploads

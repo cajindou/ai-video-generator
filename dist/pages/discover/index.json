@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "发现",
+  "backgroundColor": "#1a1a2e",
+  "usingComponents": {
+    "comp": "../../comp"
+  }
+}
