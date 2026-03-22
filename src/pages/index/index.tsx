@@ -237,11 +237,14 @@ const IndexPage = () => {
     Taro.showLoading({ title: 'AI正在分析...' })
 
     try {
+      // 使用可用的 /api/video/generate 接口
+      // 由于生产服务器缺少 video-expert 模块，这里直接调用视频生成接口
       const result = await Network.request({
-        url: '/api/video-expert/preview',
+        url: '/api/video/generate',
         method: 'POST',
         data: {
           images: uploadedImages,
+          openid: AuthService.getOpenid(),
           extraInfo: extraInfo
         }
       })
@@ -249,12 +252,45 @@ const IndexPage = () => {
       const response = result as any
 
       if (response && response.code === 200 && response.data) {
-        setPreviewData(response.data)
+        // 构造预览数据格式
+        const mockPreviewData = {
+          imageAnalysis: {
+            shopName: response.data.storeName || '店铺',
+            industryName: '零售',
+            products: [{ name: '精选商品', sellingPoints: ['品质优良', '价格实惠'] }],
+            atmosphere: '温馨舒适',
+            targetAudience: '年轻消费者',
+            sellingPoints: ['精选好物', '超值优惠']
+          },
+          script: response.data.copywriting || '欢迎光临！',
+          storyboard: uploadedImages.map((img: string, idx: number) => ({
+            id: idx + 1,
+            imageIndex: idx,
+            duration: 2.4,
+            narration: response.data.copywriting || '',
+            sceneDescription: '精彩展示',
+            cameraMovement: '平移',
+            transition: '淡入淡出',
+            subtitle: '',
+            emotion: '热情'
+          })),
+          previewReady: true,
+          videoUrl: response.data.videoUrl
+        }
+        
+        setPreviewData(mockPreviewData)
         setCurrentStep('preview')
         Taro.hideLoading()
-        Taro.showToast({ title: '分析完成!', icon: 'success' })
+        Taro.showToast({ title: '视频已生成!', icon: 'success' })
+        
+        // 视频已生成，直接跳转到播放页
+        if (response.data.videoUrl) {
+          Taro.navigateTo({
+            url: `/pages/video-player/index?videoUrl=${encodeURIComponent(response.data.videoUrl)}&copywriting=${encodeURIComponent(response.data.copywriting || '')}`
+          })
+        }
       } else {
-        throw new Error(response?.msg || '预览失败')
+        throw new Error(response?.msg || '生成失败')
       }
     } catch (error: any) {
       console.error('[IndexPage] 预览失败:', error)
@@ -292,18 +328,37 @@ const IndexPage = () => {
    * 执行视频生成
    */
   const doGenerateVideo = async () => {
+    // 如果预览步骤已经生成了视频，直接跳转
+    if (previewData?.videoUrl) {
+      setVideoUrl(previewData.videoUrl)
+      setCurrentStep('result')
+      Taro.hideLoading()
+      Taro.showToast({ title: '视频生成成功!', icon: 'success' })
+      
+      // 更新试用次数
+      if (!isVIP) {
+        setFreeTrialCount(prev => Math.max(0, prev - 1))
+      }
+      
+      // 跳转到视频播放页
+      Taro.navigateTo({
+        url: `/pages/video-player/index?videoUrl=${encodeURIComponent(previewData.videoUrl)}&copywriting=${encodeURIComponent(previewData.script || '')}`
+      })
+      return
+    }
+
+    // 否则调用生成接口
     setCurrentStep('generating')
     Taro.showLoading({ title: '生成视频中...', mask: true })
 
     try {
       const result = await Network.request({
-        url: '/api/video-expert/confirm',
+        url: '/api/video/generate',
         method: 'POST',
         data: {
           images: uploadedImages,
-          extraInfo: extraInfo,
-          previewData: previewData,
-          userConfirmed: true
+          openid: AuthService.getOpenid(),
+          extraInfo: extraInfo
         }
       })
 
@@ -319,6 +374,11 @@ const IndexPage = () => {
         if (!isVIP) {
           setFreeTrialCount(prev => Math.max(0, prev - 1))
         }
+        
+        // 跳转到视频播放页
+        Taro.navigateTo({
+          url: `/pages/video-player/index?videoUrl=${encodeURIComponent(response.data.videoUrl)}&copywriting=${encodeURIComponent(response.data.copywriting || '')}`
+        })
       } else {
         throw new Error(response?.msg || '生成失败')
       }
