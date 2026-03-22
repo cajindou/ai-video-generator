@@ -1,69 +1,47 @@
-# 明天待办事项清单
+# 明天待办事项
 
 ## 当前状态（已完成）
-- ✅ 香港服务器（47.238.239.28）已部署
-- ✅ Docker容器已启动
-- ✅ Nginx已配置
-- ✅ API服务正常运行
-- ✅ 外部可直接访问：http://47.238.239.28/api/hello
+
+### ✅ 服务器部署完成
+- 香港服务器IP: 47.238.239.28
+- 域名: https://yuxuanbaihuo.site
+- HTTPS正常工作
+- API服务正常
+- 无需ICP备案
+
+### ✅ 小程序代码已构建
+- 下载地址: https://yuxuanbaihuo.site/uploads/dist-weapp-v2.tar.gz
+- 登录逻辑已修复
+- 服务器端登录成功（日志显示获取openid成功）
 
 ---
 
 ## 明天需要做的事情
 
-### 1. 修改 Cloudflare DNS 配置（必须）
+### 1. 解决网络连接问题
 
-**操作步骤**：
-1. 登录 Cloudflare：https://dash.cloudflare.com/
-2. 选择域名 `yuxuanbaihuo.site`
-3. 进入 **DNS** → **记录**
-4. 找到 A 记录，修改为：
-   ```
-   类型: A
-   名称: @
-   内容: 47.238.239.28  （香港服务器IP）
-   代理状态: 已代理（橙色云图标）
-   ```
-5. 如果有 www 记录，同样修改为 `47.238.239.28`
+**问题**：微信开发者工具显示 ERR_CONNECTION_REFUSED
 
-**SSL设置**：
-- 进入 **SSL/TLS** → **概述**
-- 设置为 **Full** 模式
+**解决方案**：
+
+**方法A：用真机测试（推荐）**
+1. 点击微信开发者工具顶部 **预览** 按钮
+2. 用手机微信扫描二维码
+3. 在真机上测试登录功能
+
+**方法B：检查本地网络**
+1. 关闭Windows防火墙
+2. 关闭杀毒软件
+3. 换网络环境（如手机热点）
 
 ---
 
-### 2. 更新微信公众平台 IP 白名单（必须）
+### 2. 测试完整功能
 
-**操作步骤**：
-1. 登录微信公众平台：https://mp.weixin.qq.com/
-2. 进入 **开发** → **开发管理** → **开发设置**
-3. 找到 **IP白名单**
-4. 添加以下IP：
-   ```
-   47.238.239.28（香港服务器IP）
-   ```
-5. 如果之前添加过Cloudflare IP，可以保留或删除
-
----
-
-### 3. 测试小程序功能
-
-完成上述配置后，在微信开发者工具测试：
-
-1. **登录功能**：点击登录按钮，确认能获取用户信息
-2. **图片上传**：选择3-5张图片上传
-3. **视频生成**：点击生成视频，等待AI生成
-
----
-
-### 4. 小程序代码修改（如需要）
-
-如果域名访问正常但小程序无法连接，可能需要修改 `src/network/index.ts`：
-
-```typescript
-// 检查 BASE_URL 是否正确
-const BASE_URL = 'https://yuxuanbaihuo.site'
-```
+登录成功后测试：
+1. 图片上传功能
+2. 视频生成功能
+3. VIP功能
 
 ---
 
@@ -73,10 +51,8 @@ const BASE_URL = 'https://yuxuanbaihuo.site'
 |-----|------|
 | 香港服务器IP | 47.238.239.28 |
 | SSH密码 | 15881509700..wen |
-| 后端端口 | 3000 |
-| 前端目录 | /var/www/html |
-| 上传目录 | /root/ai-video-generator/uploads |
-| Docker容器名 | ai-video-generator |
+| 域名 | https://yuxuanbaihuo.site |
+| 小程序AppID | wx4b20891170ea8803 |
 
 ---
 
@@ -95,38 +71,20 @@ docker logs ai-video-generator --tail 50
 # 重启容器
 docker restart ai-video-generator
 
-# 查看Nginx状态
-systemctl status nginx
-
-# 重启Nginx
-systemctl restart nginx
-
 # 测试API
-curl http://localhost/api/hello
+curl https://yuxuanbaihuo.site/api/hello
 ```
 
 ---
 
-## 问题排查
+## 文件下载地址
 
-### 如果域名无法访问
-1. 检查DNS是否指向 47.238.239.28
-2. 检查Cloudflare SSL是否为Full模式
-3. 用 `nslookup yuxuanbaihuo.site` 验证DNS
-
-### 如果小程序登录失败
-1. 检查微信公众平台IP白名单是否包含 47.238.239.28
-2. 检查微信AppID和AppSecret是否正确
-3. 查看服务器日志：`docker logs ai-video-generator --tail 50`
-
-### 如果图片上传失败
-1. 检查上传目录权限：`ls -la /root/ai-video-generator/uploads/`
-2. 检查Nginx配置中的 `client_max_body_size`
+- 小程序代码: https://yuxuanbaihuo.site/uploads/dist-weapp-v2.tar.gz
 
 ---
 
 ## 备注
 
-- 香港服务器**无需ICP备案**，可直接使用域名
-- Cloudflare提供免费SSL证书和CDN加速
-- 小程序正式发布前需要在微信公众平台配置服务器域名
+- 服务器端登录已成功（日志显示：获取 openid 成功）
+- 问题出在微信开发者工具的本地网络环境
+- 真机预览应该能正常工作
