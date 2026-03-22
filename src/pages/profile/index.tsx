@@ -10,6 +10,8 @@ import './index.css'
  * 我的页面 - 个人中心（科技风格）
  */
 const ProfilePage = () => {
+  const [openid, setOpenid] = useState('')
+  const [isVIP, setIsVIP] = useState(false)
   const [user, setUser] = useState({
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user123',
     nickname: '探索者',
@@ -25,6 +27,39 @@ const ProfilePage = () => {
   })
 
   const isWeapp = Taro.getEnv() === Taro.ENV_TYPE.WEAPP
+
+  // 获取用户openid和VIP状态
+  const loadUserInfo = async () => {
+    try {
+      const loginRes = await Taro.login()
+      if (loginRes.code) {
+        // 调用后端获取openid
+        const res = await Network.request({
+          url: '/api/auth/login',
+          method: 'POST',
+          data: { code: loginRes.code }
+        })
+        
+        if (res.data?.code === 200 && res.data?.data?.openid) {
+          setOpenid(res.data.data.openid)
+          
+          // 获取VIP状态
+          const quotaRes = await Network.request({
+            url: `/api/vip/quota?openid=${res.data.data.openid}`
+          })
+          
+          if (quotaRes.data?.code === 200) {
+            setIsVIP(quotaRes.data.data.isVip)
+            if (quotaRes.data.data.isVip) {
+              setUser(prev => ({ ...prev, level: '尊享会员' }))
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error('获取用户信息失败:', err)
+    }
+  }
 
   // 加载统计数据
   const loadStats = async () => {
@@ -53,9 +88,10 @@ const ProfilePage = () => {
     }
   }
 
-  // 页面加载时获取统计数据
+  // 页面加载时获取统计数据和用户信息
   useEffect(() => {
     loadStats()
+    loadUserInfo()
   }, [])
 
   // 上传头像
@@ -235,8 +271,32 @@ const ProfilePage = () => {
               <View className="tech-user-level">
                 <Text className="tech-level-text">{user.level}</Text>
               </View>
+              {openid && (
+                <View className="tech-openid-section">
+                  <Text className="tech-openid-label">ID: </Text>
+                  <Text className="tech-openid-value">{openid.substring(0, 16)}...</Text>
+                  <Text 
+                    className="tech-copy-btn"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      Taro.setClipboardData({ data: openid })
+                      Taro.showToast({ title: 'ID已复制', icon: 'success' })
+                    }}
+                  >
+                    复制
+                  </Text>
+                </View>
+              )}
             </View>
           </View>
+          
+          {/* VIP状态提示 */}
+          {isVIP && (
+            <View className="tech-vip-badge-large">
+              <Award size={20} color="#FFD700" />
+              <Text className="tech-vip-text">尊享会员</Text>
+            </View>
+          )}
 
           {/* 数据统计 */}
           <View className="tech-stats-grid">

@@ -151,6 +151,56 @@
   letter-spacing: 0.5px;
 }
 
+/* OpenID显示区域 */
+.tech-openid-section {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+}
+
+.tech-openid-label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.tech-openid-value {
+  font-size: 11px;
+  color: #8B5CF6;
+  font-family: monospace;
+}
+
+.tech-copy-btn {
+  font-size: 11px;
+  color: #A78BFA;
+  margin-left: 6px;
+  padding: 2px 8px;
+  background: rgba(139, 92, 246, 0.2);
+  border-radius: 4px;
+}
+
+/* VIP大徽章 */
+.tech-vip-badge-large {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 165, 0, 0.2) 100%);
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  border-radius: 12px;
+  margin-top: 16px;
+}
+
+.tech-vip-text {
+  font-size: 16px;
+  color: #FFD700;
+  font-weight: 700;
+}
+
 .tech-upgrade-btn {
   flex-shrink: 0;
   padding: 8px 16px;
