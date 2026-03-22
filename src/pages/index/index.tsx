@@ -234,11 +234,11 @@ const IndexPage = () => {
     }
 
     setCurrentStep('previewing')
-    Taro.showLoading({ title: 'AI正在分析...' })
+    Taro.showLoading({ title: 'AI分析中，请稍候...' })
 
     try {
       // 使用可用的 /api/video/generate 接口
-      // 由于生产服务器缺少 video-expert 模块，这里直接调用视频生成接口
+      // 视频生成需要较长时间（1-3分钟），设置较长超时
       const result = await Network.request({
         url: '/api/video/generate',
         method: 'POST',
@@ -246,7 +246,8 @@ const IndexPage = () => {
           images: uploadedImages,
           openid: AuthService.getOpenid(),
           extraInfo: extraInfo
-        }
+        },
+        timeout: 300000 // 5分钟超时
       })
 
       const response = result as any
