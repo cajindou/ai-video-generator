@@ -1198,20 +1198,21 @@ export class VideoService {
           })
           .save(outputPath);
       } else {
-        // 无配音：使用 filter_complex 生成静音音频
+        // 无配音：使用 lavfi 输入静音音频
         console.log('使用静音音频...');
-        const filterComplexWithAudio = `${vf};anullsrc=channel_layout=stereo:sample_rate=44100[a]`;
         
         ffmpeg()
           .input(inputPath)
+          .input('anullsrc=channel_layout=stereo:sample_rate=44100')
+          .inputFormat('lavfi')
           .videoCodec('libx264')
           .audioCodec('aac')
           .outputOptions([
             '-preset ultrafast',
             '-crf 28',
-            '-filter_complex', filterComplexWithAudio,
+            '-vf', vf,
             '-map', '0:v',
-            '-map', '[a]',
+            '-map', '1:a',
             '-shortest'
           ])
           .on('end', () => {
@@ -1342,7 +1343,7 @@ export class VideoService {
 
 
   /**
-   * 使用 FFmpeg 从图片生成视频（带字幕和静音音频）
+   * 使用 FFmpeg 从图片生成视频（带静音音频）
    */
   private async generateVideoFromImageWithFFmpeg(imagePath: string, outputPath: string, duration: number, text: string): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -1350,13 +1351,13 @@ export class VideoService {
 
       console.log('开始生成视频:', { imagePath, outputPath, duration, textLength: text.length });
 
-      // 使用 filter_complex 生成音频流，而不是单独的 input
-      const filterComplex = `[0:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,setsar=1,format=yuv420p,fps=30[v];anullsrc=r=44100:cl=stereo[a]`;
-
+      // 使用 fluent-ffmpeg 的正确方式生成静音音频
       ffmpeg(imagePath)
         .inputOptions([
           '-loop 1',
         ])
+        .input('anullsrc=channel_layout=stereo:sample_rate=44100')
+        .inputFormat('lavfi')
         .videoCodec('libx264')
         .audioCodec('aac')
         .outputOptions([
@@ -1364,9 +1365,8 @@ export class VideoService {
           '-crf 28',
           '-pix_fmt yuv420p',
           '-movflags +faststart',
-          '-filter_complex', filterComplex,
-          '-map', '[v]',
-          '-map', '[a]'
+          '-vf', 'scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2',
+          '-shortest'
         ])
         .duration(duration)
         .on('start', (commandLine) => {
