@@ -33,11 +33,15 @@ export class AuthController {
     try {
       const result = await this.authService.weappLogin(body.code, body.userInfo)
 
-      return {
+      const response = {
         code: 200,
         msg: result.isNewUser ? '注册成功' : '登录成功',
         data: result,
       }
+
+      this.logger.info(`登录响应: ${JSON.stringify(response)}`)
+
+      return response
     } catch (error: any) {
       this.logger.error(`登录失败: ${error.message}`)
 
