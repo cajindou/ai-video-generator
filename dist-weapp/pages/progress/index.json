@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "生成进度",
+  "navigationBarBackgroundColor": "#ffffff",
+  "navigationBarTextStyle": "black",
+  "usingComponents": {
+    "comp": "../../comp"
+  }
+}

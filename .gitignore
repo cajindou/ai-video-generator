@@ -49,9 +49,8 @@ data.db*
 *.tgz
 *.zip
 
-# Compiled files (dist, dist-weapp, dist-web will be removed from git)
+# Compiled files (dist, dist-web will be removed from git)
 dist/
-dist-weapp/
 dist-web/
 
 # Large files (over 50MB)

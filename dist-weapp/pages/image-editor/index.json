@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "图片编辑",
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "comp": "../../comp"
+  }
+}

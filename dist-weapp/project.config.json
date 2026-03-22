@@ -1,0 +1,15 @@
+{
+  "miniprogramRoot": "./",
+  "projectname": "宇轩百货",
+  "description": "宇轩百货 - AI视频生成工具",
+  "appid": "wx4b20891170ea8803",
+  "setting": {
+    "urlCheck": false,
+    "es6": true,
+    "enhance": true,
+    "compileHotReLoad": true,
+    "postcss": true,
+    "minified": true
+  },
+  "compileType": "miniprogram"
+}
