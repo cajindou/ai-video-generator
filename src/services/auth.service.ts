@@ -32,9 +32,9 @@ export class AuthService {
       if (cachedOpenid) {
         // 获取最新用户信息
         const userInfo = await UserService.getUserInfo(cachedOpenid)
-        const userInfoResp = userInfo as any
-        if (userInfo && userInfoResp.code === 200) {
-          return userInfoResp.data
+        const userInfoData = (userInfo as any).data
+        if (userInfoData && userInfoData.code === 200) {
+          return userInfoData.data
         }
       }
 
@@ -48,10 +48,13 @@ export class AuthService {
 
       // 调用后端登录接口
       const loginResult = await UserService.weappLogin(loginRes.code)
-      const loginResultResp = loginResult as any
+      // Taro.request 返回 { statusCode, data, header }，后端数据在 data 中
+      const responseData = (loginResult as any).data
 
-      if (loginResult && loginResultResp.code === 200) {
-        const { openid, quota } = loginResultResp.data
+      console.log('[AuthService] 登录响应:', responseData)
+
+      if (responseData && responseData.code === 200) {
+        const { openid, quota } = responseData.data
 
         // 保存 openid
         Taro.setStorageSync(this.STORAGE_KEY_OPENID, openid)
@@ -145,10 +148,10 @@ export class AuthService {
     }
 
     const userInfo = await UserService.getUserInfo(openid)
-    const userInfoResp = userInfo as any
-    if (userInfo && userInfoResp.code === 200) {
-      this.updateUserInfo(userInfoResp.data)
-      return userInfoResp.data
+    const userInfoData = (userInfo as any).data
+    if (userInfoData && userInfoData.code === 200) {
+      this.updateUserInfo(userInfoData.data)
+      return userInfoData.data
     }
 
     return null
