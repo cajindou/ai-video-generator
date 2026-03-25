@@ -1,5 +1,5 @@
 import { View, Text, Button, Image, ScrollView, Input } from '@tarojs/components'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { Network } from '@/network'
 import Taro from '@tarojs/taro'
 import { Send, Mic, Sparkles, User, Zap, Star, CirclePlay, Gift, Info } from 'lucide-react-taro'
@@ -19,7 +19,7 @@ const ChatPage = () => {
   const [inputText, setInputText] = useState('')
   const [isRecording, setIsRecording] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
-  const scrollViewRef = useRef<any>(null)
+  const [scrollIntoView, setScrollIntoView] = useState('')
   
   const isWeapp = Taro.getEnv() === Taro.ENV_TYPE.WEAPP
 
@@ -42,13 +42,10 @@ const ChatPage = () => {
     setMessages([welcomeMessage])
   }, [])
 
-  // 滚动到底部
+  // 滚动到底部（小程序不支持 scrollTo API，使用 scroll-into-view）
   useEffect(() => {
-    if (scrollViewRef.current) {
-      scrollViewRef.current.scrollTo({
-        scrollTop: 999999,
-        duration: 300
-      })
+    if (messages.length > 0) {
+      setScrollIntoView(`msg-${messages.length - 1}`)
     }
   }, [messages])
 
@@ -327,13 +324,14 @@ const ChatPage = () => {
 
       {/* 消息列表 */}
       <ScrollView
-        ref={scrollViewRef}
         scrollY
         className="tech-message-list"
+        scrollIntoView={scrollIntoView}
+        scrollWithAnimation
         style={{ paddingBottom: '20px' }}
       >
         {messages.map((message) => (
-          <View key={message.id} className={`tech-message-item ${message.type}`}>
+          <View key={message.id} id={`msg-${message.id}`} className={`tech-message-item ${message.type}`}>
             {/* 助手消息 */}
             {message.type === 'assistant' && (
               <View className="tech-message-wrapper tech-message-assistant">
