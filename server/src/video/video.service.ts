@@ -382,24 +382,17 @@ export class VideoService {
     const base64Images = await this.imageUrlsToBase64(imageUrls);
     console.log('Base64转换成功，数量:', base64Images.length);
 
-    // 构建 content 数组
+    // 构建 content 数组（不使用首帧图片）
     const contentItems: Content[] = [];
 
-    // 添加第一张图片作为 first_frame
-    contentItems.push({
-      type: 'image_url',
-      image_url: { url: base64Images[0] },
-      role: 'first_frame'
-    });
-
-    // 构建 prompt
+    // 构建 prompt（只用文本生成视频）
     const promptText = `Generate a 12-second professional shop exploration video.\n\n` +
-      `Visual References: ${base64Images.length} reference images showing shop sign, products, and layout.\n\n` +
-      `Presenter: Beautiful female Asian presenter (20-30 years old), MUST appear in ALL scenes.\n\n` +
-      `Audio Requirements:\n` +
-      `- Voice: "${copywriting}" (spoken by presenter, clear and energetic)\n` +
-      `- Background Music: High-energy, royalty-free, viral-style beats\n\n` +
-      `Quality: 720p HD, 9:16 vertical format, cinematic, dynamic camera movements.\n`;
+      `Scene: A beautiful young female presenter (25 years old, Asian, elegant makeup) in a warm shop environment.\n\n` +
+      `Action: She faces the camera with a warm smile, speaking naturally with expressive hand gestures.\n\n` +
+      `Narration: "${copywriting}"\n\n` +
+      `Camera: Smooth tracking shots, zoom in on featured products, dynamic transitions.\n\n` +
+      `Audio: Clear presenter narration, subtle background music, natural ambient sounds.\n\n` +
+      `Quality: 720p HD, 9:16 vertical format, cinematic, professional lighting.`;
 
     contentItems.push({
       type: 'text',

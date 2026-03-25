@@ -105,21 +105,8 @@ export class ZhipuService {
     const prompt = this.buildMovieGradePrompt(script);
     
     try {
-      // 使用首帧图片生成视频
-      if (validImageUrls.length > 0) {
-        console.log('[VideoService] 使用首帧图片生成电影级视频...');
-        const result = await this.generateVideo(prompt, {
-          duration: 12,
-          ratio: '9:16',
-          firstFrameUrl: validImageUrls[0],
-          returnLastFrame: false,
-        });
-        console.log(`[VideoService] 电影级视频生成完成: ${result.videoUrl}`);
-        return result.videoUrl;
-      }
-      
-      // 没有图片则直接生成
-      console.log('[VideoService] 无首帧图片，直接生成电影级视频...');
+      // 不使用首帧图片，直接生成视频
+      console.log('[VideoService] 生成电影级视频（不使用首帧图片）...');
       const result = await this.generateVideo(prompt, {
         duration: 12,
         ratio: '9:16',
@@ -130,21 +117,7 @@ export class ZhipuService {
       
     } catch (error: any) {
       console.error('[VideoService] 视频生成失败:', error.message);
-      
-      // 如果使用首帧图片失败，尝试不使用首帧图片再次生成
-      console.log('[VideoService] 尝试不使用首帧图片重新生成...');
-      try {
-        const result = await this.generateVideo(prompt, {
-          duration: 12,
-          ratio: '9:16',
-          returnLastFrame: false,
-        });
-        console.log(`[VideoService] 重试成功: ${result.videoUrl}`);
-        return result.videoUrl;
-      } catch (retryError: any) {
-        console.error('[VideoService] 重试也失败:', retryError.message);
-        throw new Error(`视频生成失败，请稍后重试`);
-      }
+      throw new Error(`视频生成失败，请稍后重试`);
     }
   }
 
