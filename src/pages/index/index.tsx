@@ -82,13 +82,22 @@ const IndexPage = () => {
   // ========== 生命周期 ==========
   
   useEffect(() => {
-    // 从缓存读取用户信息，不重复调用登录
+    // 从缓存读取用户信息，不发起任何网络请求
     const cachedUser = AuthService.getUserInfo()
     if (cachedUser) {
       setFreeTrialCount(cachedUser.quota.remainingQuota)
       setIsVIP(cachedUser.quota.isVip)
     }
   }, [])
+
+  // 确保用户已登录（按需登录）
+  const ensureLoggedIn = async () => {
+    let user = AuthService.getUserInfo()
+    if (!user) {
+      user = await AuthService.login()
+    }
+    return user
+  }
 
   // ========== 图片上传 ==========
   
@@ -209,6 +218,17 @@ const IndexPage = () => {
       Taro.showToast({ title: '请上传至少3张图片', icon: 'none' })
       return
     }
+
+    // 确保用户已登录
+    const user = await ensureLoggedIn()
+    if (!user) {
+      Taro.showToast({ title: '请先登录', icon: 'none' })
+      return
+    }
+
+    // 更新用户配额显示
+    setFreeTrialCount(user.quota.remainingQuota)
+    setIsVIP(user.quota.isVip)
 
     if (freeTrialCount <= 0 && !isVIP) {
       Taro.showModal({
