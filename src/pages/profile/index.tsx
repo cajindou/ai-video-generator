@@ -1,6 +1,6 @@
 import { View, Text, Image, ScrollView, Input } from '@tarojs/components'
-import { useState, useEffect } from 'react'
-import Taro from '@tarojs/taro'
+import { useState, useRef } from 'react'
+import Taro, { useDidShow } from '@tarojs/taro'
 import { History, Star, ChevronRight, Shield, Award, Camera, Pencil } from 'lucide-react-taro'
 import { Network } from '@/network'
 import { AuthService } from '@/services/auth.service'
@@ -11,6 +11,9 @@ import './index.css'
  * 我的页面 - 个人中心
  */
 const ProfilePage = () => {
+  // 使用 ref 追踪是否已加载
+  const hasLoaded = useRef(false)
+  
   const [userId, setUserId] = useState('')
   const [isVIP, setIsVIP] = useState(false)
   const [user, setUser] = useState({
@@ -104,16 +107,17 @@ const ProfilePage = () => {
     }
   }
 
-  useEffect(() => {
+  // 页面显示时加载数据（而不是启动时）
+  useDidShow(() => {
     // 只加载缓存数据，不发起网络请求
     loadUserInfo()
-    // 统计数据延迟 5 秒加载，避免启动时网络拥堵
-    const timer = setTimeout(() => {
+    
+    // 只在首次显示时加载统计数据
+    if (!hasLoaded.current) {
+      hasLoaded.current = true
       loadStats()
-    }, 5000)
-    return () => clearTimeout(timer)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    }
+  })
 
   // 上传头像
   const handleUploadAvatar = () => {

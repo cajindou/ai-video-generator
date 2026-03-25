@@ -1,6 +1,6 @@
 import { View, Text, Button, Image, ScrollView } from '@tarojs/components'
-import { useState, useEffect } from 'react'
-import Taro from '@tarojs/taro'
+import { useState, useEffect, useRef } from 'react'
+import Taro, { useDidShow } from '@tarojs/taro'
 import { Play, Clock, Heart, Search, Flame, Award, Star, Film } from 'lucide-react-taro'
 import { DatabaseHelper } from '@/utils/database'
 import './index.css'
@@ -13,6 +13,9 @@ const DiscoverPage = () => {
   const [historyList, setHistoryList] = useState<any[]>([])
   const [favoriteList, setFavoriteList] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
+  
+  // 使用 ref 追踪是否已加载，避免启动时自动加载
+  const hasLoaded = useRef(false)
 
   // 加载历史记录
   const loadHistory = async () => {
@@ -44,17 +47,26 @@ const DiscoverPage = () => {
     }
   }
 
+  // 页面显示时加载数据（而不是启动时）
+  useDidShow(() => {
+    // 只在首次显示时加载，避免每次切换回来都刷新
+    if (!hasLoaded.current) {
+      hasLoaded.current = true
+      loadHistory()
+    }
+  })
+
   // 切换标签时加载数据
   useEffect(() => {
+    // 只有在已初始化后才响应标签切换
+    if (!hasLoaded.current) return
+    
     if (activeTab === 'hot' || activeTab === 'new') {
       loadHistory()
     } else if (activeTab === 'favorite') {
       loadFavorites()
     }
   }, [activeTab])
-
-  // 移除初始加载，避免小程序启动时同时发起多个请求
-  // 用户进入发现页面时会自动触发标签切换加载
 
   // 分类标签
   const categories = [
