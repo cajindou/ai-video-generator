@@ -312,13 +312,8 @@ ${script}
 
     const contentItems: any[] = [];
 
-    // 使用第一张图片作为首帧
-    contentItems.push({
-      type: 'image_url',
-      image_url: { url: base64Images[0] },
-      role: 'first_frame',
-    });
-
+    // 不使用首帧图片，只用文本Prompt生成视频（图片仅用于AI分析）
+    // 参考用户要求：https://压缩摘要 - 视频生成方案：不使用首帧图片，只用文本Prompt生成视频
     contentItems.push({
       type: 'text',
       text: promptText,

@@ -1897,20 +1897,16 @@ ${copywritingSegment}
     const imageAnalysisResult = await this.intelligentImageAnalysis(base64Images);
     console.log('图片分析结果:', JSON.stringify(imageAnalysisResult, null, 2));
 
-    // 选择最佳首帧图片
+    // 选择最佳首帧图片（仅用于分析，不用于视频生成）
     const bestFirstFrameIndex = imageAnalysisResult.bestFirstFrameIndex;
     const bestFirstFrame = base64Images[bestFirstFrameIndex];
-    console.log(`选择第 ${bestFirstFrameIndex + 1} 张图片作为首帧，原因: ${imageAnalysisResult.images[bestFirstFrameIndex].reason}`);
+    console.log(`最佳图片为第 ${bestFirstFrameIndex + 1} 张，原因: ${imageAnalysisResult.images[bestFirstFrameIndex].reason}（仅用于分析，不作为首帧）`);
 
     // 构建 content 数组
     const contentItems: Content[] = [];
 
-    // 添加智能选择的首帧图片
-    contentItems.push({
-      type: 'image_url',
-      image_url: { url: bestFirstFrame },
-      role: 'first_frame'
-    });
+    // 不使用首帧图片，只用文本Prompt生成视频（图片仅用于AI分析）
+    // 参考用户要求：视频生成方案改为纯文本Prompt
 
     // 构建智能化的 prompt，包含每张图片的详细分析
     let promptText = `🎬 INTELLIGENT VIDEO GENERATION REQUEST\n\n`;

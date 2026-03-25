@@ -1523,11 +1523,8 @@ ${bestMoves || '首次设计，追求电影级'}
     }
 
     const contentItems: Content[] = [];
-    contentItems.push({
-      type: 'image_url',
-      image_url: { url: base64Images[0] },
-      role: 'first_frame'
-    });
+    // 不使用首帧图片，只用文本Prompt生成视频（图片仅用于AI分析）
+    // 参考用户要求：视频生成方案改为纯文本Prompt
 
     const consistency = imageAnalysis.consistencyElements;
     
