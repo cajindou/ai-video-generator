@@ -3,6 +3,9 @@ import Taro from '@tarojs/taro'
 // 生产环境域名 - 小程序专用
 const PRODUCTION_DOMAIN = 'https://yuxuanbaihuo.site'
 
+// 默认超时时间（毫秒）
+const DEFAULT_TIMEOUT = 30000
+
 /**
  * 网络请求模块
  * 封装 Taro.request、Taro.uploadFile、Taro.downloadFile，自动添加项目域名前缀
@@ -25,6 +28,7 @@ export namespace Network {
         return Taro.request({
             ...option,
             url: createUrl(option.url),
+            timeout: option.timeout || DEFAULT_TIMEOUT,
         })
     }
 
@@ -32,6 +36,7 @@ export namespace Network {
         return Taro.uploadFile({
             ...option,
             url: createUrl(option.url),
+            timeout: option.timeout || DEFAULT_TIMEOUT,
         })
     }
 
@@ -39,6 +44,7 @@ export namespace Network {
         return Taro.downloadFile({
             ...option,
             url: createUrl(option.url),
+            timeout: option.timeout || DEFAULT_TIMEOUT,
         })
     }
 }
