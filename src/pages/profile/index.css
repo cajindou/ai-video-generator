@@ -151,7 +151,146 @@
   letter-spacing: 0.5px;
 }
 
-/* OpenID显示区域 */
+/* 昵称编辑行 */
+.tech-nickname-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.tech-user-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.tech-edit-icon {
+  opacity: 0.7;
+}
+
+/* 用户专属ID显示区域 */
+.tech-userid-section {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+}
+
+.tech-userid-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.tech-userid-value {
+  font-size: 14px;
+  color: #A78BFA;
+  font-family: monospace;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.tech-copy-btn {
+  font-size: 11px;
+  color: #A78BFA;
+  margin-left: 8px;
+  padding: 2px 10px;
+  background: rgba(139, 92, 246, 0.2);
+  border-radius: 4px;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+/* 编辑昵称弹窗 */
+.tech-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.tech-modal-content {
+  width: 80%;
+  max-width: 320px;
+  background: linear-gradient(135deg, rgba(26, 26, 46, 0.95) 0%, rgba(22, 33, 62, 0.95) 100%);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(139, 92, 246, 0.3);
+}
+
+.tech-modal-title {
+  display: block;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.tech-modal-input-wrap {
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+}
+
+.tech-modal-input {
+  width: 100%;
+  font-size: 16px;
+  color: #fff;
+  background: transparent;
+}
+
+.tech-modal-placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.tech-modal-btns {
+  display: flex;
+  gap: 12px;
+}
+
+.tech-modal-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.tech-modal-cancel {
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.tech-modal-confirm {
+  background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%);
+  border: none;
+}
+
+.tech-modal-btn-text {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 600;
+}
+
+.tech-modal-btn-text-confirm {
+  font-size: 15px;
+  color: #fff;
+  font-weight: 700;
+}
+
+/* OpenID显示区域（旧版保留兼容） */
 .tech-openid-section {
   display: flex;
   align-items: center;
@@ -171,15 +310,6 @@
   font-size: 11px;
   color: #8B5CF6;
   font-family: monospace;
-}
-
-.tech-copy-btn {
-  font-size: 11px;
-  color: #A78BFA;
-  margin-left: 6px;
-  padding: 2px 8px;
-  background: rgba(139, 92, 246, 0.2);
-  border-radius: 4px;
 }
 
 /* VIP大徽章 */

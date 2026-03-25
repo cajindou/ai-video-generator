@@ -1,16 +1,16 @@
-import { View, Text, Image, ScrollView } from '@tarojs/components'
+import { View, Text, Image, ScrollView, Input } from '@tarojs/components'
 import { useState, useEffect } from 'react'
 import Taro from '@tarojs/taro'
-import { History, Star, ChevronRight, Shield, Award, Camera } from 'lucide-react-taro'
+import { History, Star, ChevronRight, Shield, Award, Camera, Pencil } from 'lucide-react-taro'
 import { Network } from '@/network'
 import { DatabaseHelper } from '@/utils/database'
 import './index.css'
 
 /**
- * 我的页面 - 个人中心（简化版）
+ * 我的页面 - 个人中心
  */
 const ProfilePage = () => {
-  const [openid, setOpenid] = useState('')
+  const [userId, setUserId] = useState('')
   const [isVIP, setIsVIP] = useState(false)
   const [user, setUser] = useState({
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user123',
@@ -19,20 +19,53 @@ const ProfilePage = () => {
     videos: 0,
     favorites: 0,
   })
+  
+  // 编辑昵称相关
+  const [showEditNickname, setShowEditNickname] = useState(false)
+  const [editNickname, setEditNickname] = useState('')
 
-  // 获取用户openid和VIP状态
+  // 生成8-9位数字ID
+  const generateUserId = () => {
+    // 生成8-9位纯数字ID
+    const length = Math.random() > 0.5 ? 8 : 9
+    let id = ''
+    for (let i = 0; i < length; i++) {
+      id += Math.floor(Math.random() * 10).toString()
+    }
+    return id
+  }
+
+  // 获取或创建用户ID
+  const getOrCreateUserId = () => {
+    let storedUserId = Taro.getStorageSync('userId')
+    if (!storedUserId) {
+      storedUserId = generateUserId()
+      Taro.setStorageSync('userId', storedUserId)
+    }
+    return storedUserId
+  }
+
+  // 获取用户信息
   const loadUserInfo = async () => {
     try {
-      // 从全局获取已登录的用户信息
-      const userInfo = Taro.getStorageSync('userInfo')
-      if (userInfo?.openid) {
-        setOpenid(userInfo.openid)
-        if (userInfo.nickname) {
-          setUser(prev => ({ ...prev, nickname: userInfo.nickname }))
-        }
+      // 获取或创建用户ID
+      const uid = getOrCreateUserId()
+      setUserId(uid)
+      
+      // 获取昵称
+      const storedNickname = Taro.getStorageSync('userNickname')
+      if (storedNickname) {
+        setUser(prev => ({ ...prev, nickname: storedNickname }))
+      }
+      
+      // 获取头像
+      const storedAvatar = Taro.getStorageSync('userAvatar')
+      if (storedAvatar) {
+        setUser(prev => ({ ...prev, avatar: storedAvatar }))
       }
       
       // 获取VIP状态
+      const userInfo = Taro.getStorageSync('userInfo')
       if (userInfo?.openid) {
         try {
           const quotaRes = await Network.request({
@@ -83,6 +116,7 @@ const ProfilePage = () => {
   useEffect(() => {
     loadStats()
     loadUserInfo()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // 上传头像
@@ -114,6 +148,7 @@ const ProfilePage = () => {
                 avatarUrl = `https://yuxuanbaihuo.site${avatarUrl}`
               }
               setUser(prev => ({ ...prev, avatar: avatarUrl }))
+              Taro.setStorageSync('userAvatar', avatarUrl)
               Taro.showToast({ title: '头像更新成功', icon: 'success' })
             }
           } catch (err) {
@@ -125,6 +160,34 @@ const ProfilePage = () => {
         }
       }
     })
+  }
+
+  // 打开编辑昵称弹窗
+  const handleEditNickname = () => {
+    setEditNickname(user.nickname)
+    setShowEditNickname(true)
+  }
+
+  // 保存昵称
+  const handleSaveNickname = () => {
+    if (!editNickname.trim()) {
+      Taro.showToast({ title: '昵称不能为空', icon: 'none' })
+      return
+    }
+    if (editNickname.length > 12) {
+      Taro.showToast({ title: '昵称最多12个字', icon: 'none' })
+      return
+    }
+    setUser(prev => ({ ...prev, nickname: editNickname.trim() }))
+    Taro.setStorageSync('userNickname', editNickname.trim())
+    setShowEditNickname(false)
+    Taro.showToast({ title: '昵称修改成功', icon: 'success' })
+  }
+
+  // 复制ID
+  const handleCopyId = () => {
+    Taro.setClipboardData({ data: userId })
+    Taro.showToast({ title: 'ID已复制', icon: 'success' })
   }
 
   // 功能菜单
@@ -181,26 +244,20 @@ const ProfilePage = () => {
             </View>
             
             <View className="tech-user-details">
-              <Text className="tech-user-name">{user.nickname}</Text>
+              {/* 昵称 + 编辑按钮 */}
+              <View className="tech-nickname-row" onClick={handleEditNickname}>
+                <Text className="tech-user-name">{user.nickname}</Text>
+                <Pencil size={16} color="#8B5CF6" className="tech-edit-icon" />
+              </View>
               <View className="tech-user-level">
                 <Text className="tech-level-text">{user.level}</Text>
               </View>
-              {openid && (
-                <View className="tech-openid-section">
-                  <Text className="tech-openid-label">ID: </Text>
-                  <Text className="tech-openid-value">{openid.substring(0, 16)}...</Text>
-                  <Text 
-                    className="tech-copy-btn"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      Taro.setClipboardData({ data: openid })
-                      Taro.showToast({ title: 'ID已复制', icon: 'success' })
-                    }}
-                  >
-                    复制
-                  </Text>
-                </View>
-              )}
+              {/* 用户专属ID */}
+              <View className="tech-userid-section">
+                <Text className="tech-userid-label">ID: </Text>
+                <Text className="tech-userid-value">{userId}</Text>
+                <Text className="tech-copy-btn" onClick={handleCopyId}>复制</Text>
+              </View>
             </View>
           </View>
           
@@ -270,6 +327,33 @@ const ProfilePage = () => {
           <Text className="tech-footer-desc">Powered by AI Technology</Text>
         </View>
       </ScrollView>
+
+      {/* 编辑昵称弹窗 */}
+      {showEditNickname && (
+        <View className="tech-modal-overlay" onClick={() => setShowEditNickname(false)}>
+          <View className="tech-modal-content" onClick={(e) => e.stopPropagation()}>
+            <Text className="tech-modal-title">修改昵称</Text>
+            <View className="tech-modal-input-wrap">
+              <Input
+                className="tech-modal-input"
+                placeholder="请输入昵称（最多12个字）"
+                placeholderClass="tech-modal-placeholder"
+                value={editNickname}
+                maxlength={12}
+                onInput={(e) => setEditNickname(e.detail.value)}
+              />
+            </View>
+            <View className="tech-modal-btns">
+              <View className="tech-modal-btn tech-modal-cancel" onClick={() => setShowEditNickname(false)}>
+                <Text className="tech-modal-btn-text">取消</Text>
+              </View>
+              <View className="tech-modal-btn tech-modal-confirm" onClick={handleSaveNickname}>
+                <Text className="tech-modal-btn-text-confirm">保存</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      )}
 
       <View className="tech-safe-area" />
     </View>

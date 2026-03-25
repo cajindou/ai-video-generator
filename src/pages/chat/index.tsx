@@ -2,11 +2,11 @@ import { View, Text, Button, Image, ScrollView, Input } from '@tarojs/components
 import { useState, useEffect } from 'react'
 import { Network } from '@/network'
 import Taro from '@tarojs/taro'
-import { Send, Mic, Sparkles, User, Zap, Star, CirclePlay, Gift, Info } from 'lucide-react-taro'
+import { Send, Mic, Sparkles, User, Zap, Star, CirclePlay, Gift, Crown } from 'lucide-react-taro'
 import './index.css'
 
 /**
- * 客服页面 - 在线客服助手（科技风格）
+ * 客服页面 - 在线客服助手（真人销售专家风格）
  */
 const ChatPage = () => {
   const [messages, setMessages] = useState<Array<{
@@ -28,21 +28,15 @@ const ChatPage = () => {
     const welcomeMessage = {
       id: 0,
       type: 'assistant' as const,
-      content: `🎉 嗨！我是在线客服，你的视频创作伙伴！
+      content: `哈喽～欢迎来到宇轩百货！👋
 
-✨ 我能帮你：
-• 快速生成专业探店视频
-• 优化视频文案和效果
-• 解答使用问题
-• 提供创作灵感
-
-💡 小提示：告诉我你的需求，我会帮你快速解决问题！`,
+我是你的专属客服小宇，有什么想问的尽管说～`,
       time: getCurrentTime()
     }
     setMessages([welcomeMessage])
   }, [])
 
-  // 滚动到底部（小程序不支持 scrollTo API，使用 scroll-into-view）
+  // 滚动到底部
   useEffect(() => {
     if (messages.length > 0) {
       setScrollIntoView(`msg-${messages.length - 1}`)
@@ -87,8 +81,6 @@ const ChatPage = () => {
         }
       })
 
-      console.log('LLM响应:', response.data)
-
       if (response.data.code === 200 && response.data.data?.reply) {
         const assistantMessage = {
           id: messages.length + 1,
@@ -101,9 +93,8 @@ const ChatPage = () => {
         throw new Error(response.data.msg || '获取回复失败')
       }
     } catch (err: any) {
-      console.error('调用LLM失败', err)
-      // 降级：使用本地回复
-      const aiResponse = generate智能Response(question)
+      // 降级：使用本地智能回复
+      const aiResponse = generateSalesResponse(question)
       const assistantMessage = {
         id: messages.length + 1,
         type: 'assistant' as const,
@@ -116,113 +107,67 @@ const ChatPage = () => {
     }
   }
 
-  // 生成智能回复（模拟）
-  const generate智能Response = (userInput: string) => {
-    const lowerInput = userInput.toLowerCase()
+  // 真人销售专家风格回复
+  const generateSalesResponse = (userInput: string) => {
+    const input = userInput.toLowerCase()
     
-    if (lowerInput.includes('视频') || lowerInput.includes('生成')) {
-      return `🎬 关于视频生成，我来帮你解答！
-
-**快速生成视频三步骤：**
-1. 📸 上传3-5张照片（第一张放主播形象照）
-2. ⚡ 点击"生成"按钮，智能技术自动制作
-3. ✅ 等待约15秒，视频完成！
-
-**💡 在线客服的独家建议：**
-• 图片质量越高，视频效果越好
-• 主播照片要正面、笑容灿烂
-• 产品图片要清晰展示卖点
-
-需要我帮你开始制作吗？💪`
-    } else if (lowerInput.includes('图片') || lowerInput.includes('照片') || lowerInput.includes('上传')) {
-      return `📸 关于图片上传，在线客服来告诉你：
-
-**上传要求：**
-✅ 图片数量：3-5张
-✅ 图片格式：JPG、PNG
-✅ 图片大小：每张不超过5MB
-
-**📋 最佳拍摄顺序：**
-1️⃣ 主播形象照（正面、微笑、光线充足）
-2️⃣ 核心产品/环境展示图
-3️⃣ 优惠信息或转化助推图
-
-**⚠️ 注意事项：**
-• 避免模糊或过暗的图片
-• 保持图片风格统一
-• 图片比例建议 3:4 或 1:1
-
-还有什么疑问吗？😊`
-    } else if (lowerInput.includes('时间') || lowerInput.includes('多久')) {
-      return `⏱️ 关于生成时间，在线客服告诉你：
-
-**视频生成时长：**
-• 标准时长：约30秒以上
-• 生成耗时：通常10-20秒
-• 处理速度：智能极速渲染
-
-**🚀 为什么这么快？**
-• 采用最先进的智能技术
-• 智能优化处理流程
-• 服务器集群加速
-
-**💡 在线客服的优化建议：**
-• 选择网络较好的环境
-• 避免高峰期操作
-• 图片数量越少，生成越快
-
-还有其他问题吗？🎯`
-    } else if (lowerInput.includes('价格') || lowerInput.includes('收费') || lowerInput.includes('免费')) {
-      return `💰 关于收费标准，在线客服来介绍：
-
-**免费权益：**
-✅ 每天3次免费视频生成
-✅ 无限次查看教程
-✅ 7天历史记录保存
-
-功能完全免费使用，尽情体验！✨`
-    } else if (lowerInput.includes('你好') || lowerInput.includes('在吗') || lowerInput.includes('hi') || lowerInput.includes('hello')) {
-      return `👋 你好呀！我是在线客服，很高兴见到你！
-
-我是你的智能视频创作伙伴，专门帮你解决所有视频生成相关的问题。
-
-**现在你可以：**
-• 🎬 问我如何制作视频
-• 📸 了解图片上传要求
-• ⏱️ 询问生成时间
-• 💰 咨询收费标准
-• 💡 获取创作灵感
-
-有什么问题尽管问我，在线客服随时在线！💪✨`
-    } else if (lowerInput.includes('谢谢') || lowerInput.includes('感谢')) {
-      return `😊 不客气！能帮到你，在线客服很开心！
-
-如果还有其他问题，随时来找我哦~
-
-记住：
-• 有问题随时问在线客服
-• 创作灵感和我聊
-• 用法技巧我教你
-
-在线客服会一直陪伴你，让你的视频创作更轻松！🎉💕`
-    } else {
-      return `🤔 关于这个问题，在线客服来帮你！
-
-从你的提问来看，你可能想了解相关的视频创作知识。让我为你提供一些通用的建议：
-
-**📋 视频创作要点：**
-1. **内容为王**：选择有吸引力的主题
-2. **视觉冲击**：高质量图片是基础
-3. **节奏把控**：30秒充分展示核心卖点
-4. **文案精炼**：每句话都要有价值
-
-**💡 在线客服的建议：**
-• 先明确你的目标受众
-• 突出产品和服务的优势
-• 加入真实的体验感
-
-能否具体告诉我，你想实现什么效果？我会给你更精准的建议！😊`
+    // 视频生成相关
+    if (input.includes('视频') || input.includes('生成') || input.includes('制作')) {
+      const replies = [
+        `做视频超简单的！上传几张照片，点一下生成就行～\n\n不过现在免费用户每天只能做3个哦，想多做的宝子可以考虑开个会员，无限次生成超爽的 😎`,
+        `这个我熟！拍照→上传→生成，三步搞定～\n\n对了，你是想给什么产品做视频呀？如果是做探店的话，我建议多拍几张环境图，效果会更赞！\n\n💡 小提示：会员可以无限生成，而且视频清晰度更高哦～`,
+        `视频生成大概15-20秒就搞定啦！\n\n不过提醒你一下，免费版每天有限额的。你如果是打算长期用的话，真的建议开个会员，不限次数，想怎么玩怎么玩，特别适合经常要做内容的宝子 ✨`
+      ]
+      return replies[Math.floor(Math.random() * replies.length)]
     }
+    
+    // 图片上传
+    if (input.includes('图片') || input.includes('照片') || input.includes('上传')) {
+      return `照片要求不高的～3-5张，清晰点就行。\n\n👉 建议第一张放人物照，后面放产品或环境\n👉 图片别太暗，光线好效果更佳\n\n对了，你准备给什么拍视频呀？可以跟我说说，我帮你参谋参谋 😊`
+    }
+    
+    // 时间相关
+    if (input.includes('时间') || input.includes('多久') || input.includes('快')) {
+      return `差不多15-20秒就能出片，喝口水的时间就有了～\n\n是不是比想象中快？哈哈我们技术还是不错的。\n\n不过免费用户高峰期可能要排队哦，会员有专属通道，秒出片！你要不要试试？`
+    }
+    
+    // 价格/收费/会员
+    if (input.includes('价格') || input.includes('收费') || input.includes('会员') || input.includes('多少钱') || input.includes('免费') || input.includes('vip')) {
+      return `来啦来啦！这个我要好好跟你说说～\n\n💰 现在有优惠活动：\n• 月卡会员原价99，限时59.9\n• 季卡159，平均每天才1块多\n• 年卡最划算，299包年\n\n🎁 会员特权：\n• 无限次生成视频\n• 专属高清画质\n• 优先客服支持\n• 不用排队秒出片\n\n说真的，你要是经常做内容，开个会员绝对值。算下来一天几毛钱，省去剪辑外包好几百呢！\n\n要不要我帮你看看哪个适合你？😊`
+    }
+    
+    // 开通/购买
+    if (input.includes('开通') || input.includes('购买') || input.includes('支付')) {
+      return `太好啦！有眼光～\n\n你现在就可以点首页的「VIP会员」进去看看，支持微信支付，特别方便。\n\n个人建议：如果你是打算长期做探店内容的话，直接年卡最划算，折合每天不到1块钱，比请人剪辑便宜太多了！\n\n开通了随时来找我，有问题我帮你解决 💪`
+    }
+    
+    // 问候
+    if (input.includes('你好') || input.includes('在吗') || input.includes('hi') || input.includes('hello') || input.includes('哈')) {
+      return `在的在的！👋\n\n有啥想问的直接说～你是想了解视频制作，还是想看看会员权益？我都给你讲明白 😊`
+    }
+    
+    // 感谢
+    if (input.includes('谢谢') || input.includes('感谢') || input.includes('好的')) {
+      return `客气啥～有需要随时找我！\n\n对了，你是已经在用了还是准备试试？有任何问题我都在线哦 ✨`
+    }
+    
+    // 效果/质量
+    if (input.includes('效果') || input.includes('质量') || input.includes('好看')) {
+      return `效果这块你放心！我们用的最新的AI技术，做出来的视频很有质感。\n\n你看那些探店达人用的都是这种风格～\n\n💡 小提示：会员版画质更高，而且可以自定义风格，做出专属你品牌的调性！要不要试试？`
+    }
+    
+    // 问题/帮助
+    if (input.includes('问题') || input.includes('帮助') || input.includes('怎么') || input.includes('如何')) {
+      return `你说，啥问题？\n\n是使用上的问题，还是想了解会员？我给你解答 😊`
+    }
+    
+    // 默认回复 - 引导到会员
+    const defaultReplies = [
+      `嗯嗯，我懂你的意思～\n\n其实不管你做什么内容，视频都是最好的展示方式。你现在一天能做几个视频呀？要是觉得不够用的话，可以看看我们的会员方案，特别适合经常做内容的宝子 ✨`,
+      `收到～有什么想问的尽管说！\n\n对了，你是已经在用我们的视频生成功能了吗？感觉怎么样？\n\n如果用得顺手的话，真心建议开个会员，不限次数太爽了，想做几个做几个 🎬`,
+      `明白了～\n\n我跟你说，做探店内容最重要的就是稳定产出。免费版每天3个可能有点紧张，会员的话就可以放开手脚做了。\n\n你要不要先试试？有问题随时来找我 😊`
+    ]
+    return defaultReplies[Math.floor(Math.random() * defaultReplies.length)]
   }
 
   // 开始录音
@@ -243,7 +188,6 @@ const ChatPage = () => {
       setIsRecording(false)
       console.log('录音结束', res.tempFilePath)
       Taro.showToast({ title: '录音成功', icon: 'success' })
-      // TODO: 转换为文本并发送
     })
 
     recorderManager.start({
@@ -261,10 +205,10 @@ const ChatPage = () => {
 
   // 快捷问题
   const quickQuestions = [
-    { icon: <CirclePlay size={20} color="#8B5CF6" />, text: '如何生成视频？' },
-    { icon: <Info size={20} color="#8B5CF6" />, text: '图片上传要求' },
-    { icon: <Zap size={20} color="#8B5CF6" />, text: '生成需要多久？' },
-    { icon: <Gift size={20} color="#8B5CF6" />, text: '收费标准' }
+    { icon: <CirclePlay size={18} color="#8B5CF6" />, text: '怎么做视频' },
+    { icon: <Crown size={18} color="#F59E0B" />, text: '会员多少钱' },
+    { icon: <Zap size={18} color="#8B5CF6" />, text: '要多久出片' },
+    { icon: <Gift size={18} color="#8B5CF6" />, text: '有什么优惠' }
   ]
 
   // 选择快捷问题
@@ -283,17 +227,17 @@ const ChatPage = () => {
         <View className="tech-header-left">
           <View className="tech-avatar-container">
             <Image
-              src="https://api.dicebear.com/7.x/avataaars/svg?seed=xiaoqi&backgroundColor=b6e3f4"
+              src="https://api.dicebear.com/7.x/avataaars/svg?seed=xiaoyu&backgroundColor=b6e3f4"
               mode="aspectFill"
               className="tech-avatar"
             />
             <View className="tech-avatar-online"></View>
           </View>
           <View className="tech-header-info">
-            <Text className="tech-header-title">在线客服</Text>
+            <Text className="tech-header-title">客服小宇</Text>
             <View className="flex items-center gap-1">
               <Sparkles size={12} color="#10B981" />
-              <Text className="tech-header-status">在线 · 顶级销冠</Text>
+              <Text className="tech-header-status">在线 · 销售专家</Text>
             </View>
           </View>
         </View>
@@ -306,7 +250,7 @@ const ChatPage = () => {
       {/* 快捷问题区 */}
       {messages.length <= 1 && (
         <View className="tech-quick-questions">
-          <Text className="tech-quick-title">💡 常见问题</Text>
+          <Text className="tech-quick-title">💡 快速了解</Text>
           <View className="tech-quick-list">
             {quickQuestions.map((item, index) => (
               <View
@@ -336,7 +280,7 @@ const ChatPage = () => {
             {message.type === 'assistant' && (
               <View className="tech-message-wrapper tech-message-assistant">
                 <Image
-                  src="https://api.dicebear.com/7.x/avataaars/svg?seed=xiaoqi&backgroundColor=b6e3f4"
+                  src="https://api.dicebear.com/7.x/avataaars/svg?seed=xiaoyu&backgroundColor=b6e3f4"
                   mode="aspectFill"
                   className="tech-message-avatar"
                 />
@@ -367,7 +311,7 @@ const ChatPage = () => {
           <View className="tech-message-item assistant">
             <View className="tech-message-wrapper tech-message-assistant">
               <Image
-                src="https://api.dicebear.com/7.x/avataaars/svg?seed=xiaoqi&backgroundColor=b6e3f4"
+                src="https://api.dicebear.com/7.x/avataaars/svg?seed=xiaoyu&backgroundColor=b6e3f4"
                 mode="aspectFill"
                 className="tech-message-avatar"
               />
@@ -397,7 +341,7 @@ const ChatPage = () => {
         <View className="tech-input-wrapper">
           <Input
             className="tech-input"
-            placeholder="输入消息，或点击左侧图标..."
+            placeholder="输入消息..."
             placeholderClass="tech-input-placeholder"
             value={inputText}
             onInput={(e) => setInputText(e.detail.value)}
