@@ -43,32 +43,20 @@ export class AuthService {
 
   private static async doLogin(): Promise<UserInfo | null> {
     try {
-      // 优先从缓存获取用户信息
+      // 优先从缓存获取用户信息（完全依赖缓存，不发请求）
       const cachedUserInfo = this.getUserInfo()
       if (cachedUserInfo && cachedUserInfo.openid) {
         console.log('[AuthService] 使用缓存的用户信息')
         return cachedUserInfo
       }
 
-      // 检查是否已有 openid
+      // 检查是否已有 openid（可能只有 openid 没有 userInfo）
       const cachedOpenid = Taro.getStorageSync(this.STORAGE_KEY_OPENID)
       if (cachedOpenid) {
-        // 获取最新用户信息（带超时处理）
-        try {
-          const userInfo = await UserService.getUserInfo(cachedOpenid)
-          const userInfoData = (userInfo as any).data
-          if (userInfoData && userInfoData.code === 200) {
-            // 更新缓存
-            Taro.setStorageSync(this.STORAGE_KEY_USERINFO, userInfoData.data)
-            return userInfoData.data
-          }
-        } catch (err) {
-          console.warn('[AuthService] 获取用户信息超时，使用缓存')
-          // 超时时返回缓存的用户信息
-          if (cachedUserInfo) {
-            return cachedUserInfo
-          }
-        }
+        console.log('[AuthService] 已有 openid，等待登录获取完整信息')
+        // 不再调用 getUserInfo，直接返回 null，让用户重新登录
+        // 清除旧的 openid
+        Taro.removeStorageSync(this.STORAGE_KEY_OPENID)
       }
 
       // 调用微信登录
