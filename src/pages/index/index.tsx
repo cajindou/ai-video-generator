@@ -179,7 +179,11 @@ const IndexPage = () => {
           : uploadResult.data
         
         if (responseData.code === 200 && responseData.data?.url) {
-          const serverUrl = responseData.data.url
+          // 确保URL是完整的HTTPS地址
+          let serverUrl = responseData.data.url
+          if (serverUrl.startsWith('/')) {
+            serverUrl = `https://yuxuanbaihuo.site${serverUrl}`
+          }
           
           setUploadedImages(prev => {
             const updated = [...prev, serverUrl]
