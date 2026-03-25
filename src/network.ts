@@ -3,8 +3,8 @@ import Taro from '@tarojs/taro'
 // 生产环境域名 - 小程序专用
 const PRODUCTION_DOMAIN = 'https://yuxuanbaihuo.site'
 
-// 默认超时时间（毫秒）
-const DEFAULT_TIMEOUT = 30000
+// 默认超时时间（毫秒）- 60秒
+const DEFAULT_TIMEOUT = 60000
 
 /**
  * 网络请求模块

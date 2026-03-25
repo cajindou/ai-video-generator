@@ -82,27 +82,13 @@ const IndexPage = () => {
   // ========== 生命周期 ==========
   
   useEffect(() => {
-    if (isWeapp) {
-      loadUserInfo()
+    // 从缓存读取用户信息，不重复调用登录
+    const cachedUser = AuthService.getUserInfo()
+    if (cachedUser) {
+      setFreeTrialCount(cachedUser.quota.remainingQuota)
+      setIsVIP(cachedUser.quota.isVip)
     }
-  }, [isWeapp])
-
-  // ========== 用户相关 ==========
-  
-  const loadUserInfo = async () => {
-    try {
-      let user = AuthService.getUserInfo()
-      if (!user) {
-        user = await AuthService.login()
-      }
-      if (user) {
-        setFreeTrialCount(user.quota.remainingQuota)
-        setIsVIP(user.quota.isVip)
-      }
-    } catch (error) {
-      console.error('[IndexPage] 加载用户信息失败:', error)
-    }
-  }
+  }, [])
 
   // ========== 图片上传 ==========
   

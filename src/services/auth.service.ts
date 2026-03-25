@@ -21,20 +21,53 @@ export interface UserInfo {
 export class AuthService {
   private static readonly STORAGE_KEY_OPENID = 'user_openid'
   private static readonly STORAGE_KEY_USERINFO = 'user_info'
+  private static loginPromise: Promise<UserInfo | null> | null = null
 
   /**
    * 登录（自动识别微信用户）
+   * 使用单例模式防止重复登录
    */
   static async login(): Promise<UserInfo | null> {
+    // 如果正在登录中，返回同一个 Promise
+    if (this.loginPromise) {
+      return this.loginPromise
+    }
+
+    this.loginPromise = this.doLogin()
     try {
+      return await this.loginPromise
+    } finally {
+      this.loginPromise = null
+    }
+  }
+
+  private static async doLogin(): Promise<UserInfo | null> {
+    try {
+      // 优先从缓存获取用户信息
+      const cachedUserInfo = this.getUserInfo()
+      if (cachedUserInfo && cachedUserInfo.openid) {
+        console.log('[AuthService] 使用缓存的用户信息')
+        return cachedUserInfo
+      }
+
       // 检查是否已有 openid
       const cachedOpenid = Taro.getStorageSync(this.STORAGE_KEY_OPENID)
       if (cachedOpenid) {
-        // 获取最新用户信息
-        const userInfo = await UserService.getUserInfo(cachedOpenid)
-        const userInfoData = (userInfo as any).data
-        if (userInfoData && userInfoData.code === 200) {
-          return userInfoData.data
+        // 获取最新用户信息（带超时处理）
+        try {
+          const userInfo = await UserService.getUserInfo(cachedOpenid)
+          const userInfoData = (userInfo as any).data
+          if (userInfoData && userInfoData.code === 200) {
+            // 更新缓存
+            Taro.setStorageSync(this.STORAGE_KEY_USERINFO, userInfoData.data)
+            return userInfoData.data
+          }
+        } catch (err) {
+          console.warn('[AuthService] 获取用户信息超时，使用缓存')
+          // 超时时返回缓存的用户信息
+          if (cachedUserInfo) {
+            return cachedUserInfo
+          }
         }
       }
 
@@ -48,7 +81,6 @@ export class AuthService {
 
       // 调用后端登录接口
       const loginResult = await UserService.weappLogin(loginRes.code)
-      // Taro.request 返回 { statusCode, data, header }，后端数据在 data 中
       const responseData = (loginResult as any).data
 
       console.log('[AuthService] 登录响应:', responseData)
