@@ -165,11 +165,31 @@ export class VideoController {
         msg: 'success',
         data: result
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('视频生成失败:', error);
+      
+      // 提取详细错误信息
+      let errorMsg = '视频生成失败';
+      if (error.message) {
+        errorMsg = error.message;
+      } else if (error.errMsg) {
+        errorMsg = error.errMsg;
+      } else if (typeof error === 'string') {
+        errorMsg = error;
+      }
+      
+      // 特殊错误处理
+      if (errorMsg.includes('403') || errorMsg.includes('Country')) {
+        errorMsg = '服务暂时不可用，请稍后重试';
+      } else if (errorMsg.includes('timeout') || errorMsg.includes('ETIMEDOUT')) {
+        errorMsg = '网络请求超时，请检查网络后重试';
+      } else if (errorMsg.includes('ENOTFOUND') || errorMsg.includes('ECONNREFUSED')) {
+        errorMsg = '服务器连接失败，请稍后重试';
+      }
+      
       return {
         code: 500,
-        msg: error.message || '视频生成失败',
+        msg: errorMsg,
         data: null
       };
     }

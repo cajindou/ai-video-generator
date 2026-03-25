@@ -301,7 +301,22 @@ const IndexPage = () => {
     } catch (error: any) {
       console.error('[IndexPage] 预览失败:', error)
       Taro.hideLoading()
-      Taro.showToast({ title: error.message || '预览失败', icon: 'none' })
+      
+      // 解析错误信息
+      let errorMsg = '视频生成失败，请重试'
+      if (error.message) {
+        errorMsg = error.message
+      } else if (error.errMsg) {
+        errorMsg = error.errMsg
+      }
+      
+      // 显示详细错误提示
+      Taro.showModal({
+        title: '生成失败',
+        content: `${errorMsg}\n\n可能原因：\n1. 网络连接不稳定\n2. 服务器处理超时\n3. 图片格式不支持\n\n请检查后重试`,
+        showCancel: false,
+        confirmText: '我知道了'
+      })
       setCurrentStep('upload')
     }
   }
