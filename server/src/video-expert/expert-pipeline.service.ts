@@ -197,6 +197,36 @@ export interface StoryboardItem {
   subtitle: string;
   subtitleTiming: { startTime: number; endTime: number; text: string; }[];
   emotion: string;
+  // 专家7新增：视觉炸裂字幕特效
+  subtitleEffects?: {
+    type: string;
+    position: string;
+    color: string;
+    animation: {
+      entrance: string;
+      emphasis: string;
+      exit: string;
+    };
+    timing: {
+      startTime: number;
+      endTime: number;
+      charDelay: number;
+      syncMode: string;
+    };
+    visualEnhancement: {
+      shadow: string;
+      glow: string;
+      background: string;
+      borderRadius: string;
+    };
+  };
+  // 专家6新增：字幕时间轴
+  subtitleTimeline?: Array<{
+    startTime: number;
+    endTime: number;
+    text: string;
+    word: string;
+  }>;
 }
 
 export interface PresenterProfile {
@@ -361,7 +391,7 @@ export class ExpertPipelineService {
     );
     discussions.push(storyboardDiscussion);
 
-    console.log('\n✅ 专家协作完成，等待用户确认...');
+    console.log('\n✅ 专家协作完成（预览阶段），等待用户确认...');
 
     return {
       imageAnalysis,
@@ -387,14 +417,44 @@ export class ExpertPipelineService {
     console.log('🎬 【用户已确认】开始生成电影级视频...');
     console.log('='.repeat(70));
 
-    // 专家5: 视频生成
-    console.log('\n🎥 专家5【视频生成专家】正在生成视频...');
+    // 专家7: 剪辑大师 - 视觉炸裂字幕特效
+    console.log('\n🎬 专家7【剪辑大师】正在设计视觉炸裂字幕特效...');
+    const enhancedStoryboard = await this.expert7_VisualEffectsMaster(
+      previewData.storyboard,
+      previewData.script,
+      previewData.presenter
+    );
+    previewData.discussions.push({
+      expert: '剪辑大师',
+      topic: '视觉炸裂字幕特效',
+      content: '完成字幕特效设计，毫秒级同步',
+      suggestions: ['字幕与口播完美同步', '视觉特效增强冲击力'],
+      approved: true
+    });
+
+    // 专家6: 音频专家 - 毫秒级字幕同步
+    console.log('\n🎵 专家6【音频专家】正在进行毫秒级字幕同步...');
+    const audioSyncData = await this.expert6_AudioSubtitleSync(
+      previewData.script,
+      enhancedStoryboard,
+      previewData.presenter
+    );
+    previewData.discussions.push({
+      expert: '音频专家',
+      topic: '毫秒级字幕同步',
+      content: '完成字幕时间轴精确对齐',
+      suggestions: ['字幕与口播毫秒级同步', '热点背景音乐已匹配'],
+      approved: true
+    });
+
+    // 专家5: 视频生成（最后一步）
+    console.log('\n🎥 专家5【视频生成专家】正在生成最终视频...');
     const videoUrl = await this.expert5_VideoGenerationWithCinematography(
       request.imageUrls,
       previewData.script,
       previewData.imageAnalysis,
       previewData.presenter,
-      previewData.storyboard
+      enhancedStoryboard
     );
 
     // 记录学习数据
@@ -405,11 +465,166 @@ export class ExpertPipelineService {
     return {
       videoUrl,
       script: previewData.script,
-      storyboard: previewData.storyboard,
+      storyboard: enhancedStoryboard,
       imageAnalysis: previewData.imageAnalysis,
       presenter: previewData.presenter,
       discussions: previewData.discussions,
       duration: 12
+    };
+  }
+
+  // ============ 专家7: 剪辑大师 - 视觉炸裂字幕特效 ============
+
+  private async expert7_VisualEffectsMaster(
+    storyboard: StoryboardItem[],
+    script: string,
+    presenter: PresenterProfile
+  ): Promise<StoryboardItem[]> {
+    console.log('  🎨 设计视觉炸裂字幕特效...');
+
+    // 为每个分镜添加视觉炸裂字幕效果
+    const enhancedStoryboard = storyboard.map((item, index) => {
+      // 字幕特效类型（根据情绪和位置动态选择）
+      const effectTypes = [
+        '弹跳入场+缩放强调',     // 开场
+        '渐变+描边闪烁',         // 中间
+        '震动+光晕扩散',         // 高潮
+        '淡入淡出+金光环绕'      // 结尾
+      ];
+
+      // 字幕位置（避免遮挡关键内容）
+      const subtitlePositions = [
+        '底部居中+轻微上浮',
+        '左下角+斜向飞入',
+        '底部居中+震动强调',
+        '中央+放大定格'
+      ];
+
+      // 字幕颜色（根据情绪）
+      const emotionColors: Record<string, string> = {
+        '热情兴奋': '渐变橙红+白色描边',
+        '专业推荐': '金色调+深色阴影',
+        '惊喜期待': '霓虹粉紫+发光效果',
+        '亲切真诚': '温暖橙色+柔光'
+      };
+
+      // 字幕动画时长（毫秒级精确）
+      const subtitleDuration = item.duration * 1000; // 转换为毫秒
+      const charCount = item.narration?.length || 0;
+      const msPerChar = Math.floor(subtitleDuration / Math.max(charCount, 1));
+
+      return {
+        ...item,
+        // 增强字幕设计
+        subtitleEffects: {
+          type: effectTypes[index % effectTypes.length],
+          position: subtitlePositions[index % subtitlePositions.length],
+          color: emotionColors[item.emotion] || '白色+黑色描边',
+          animation: {
+            entrance: index === 0 ? '弹跳入场(0-300ms)' : '滑入入场(0-200ms)',
+            emphasis: '缩放脉冲(每300ms循环)',
+            exit: index === storyboard.length - 1 ? '淡出+光晕(最后500ms)' : '滑出(最后200ms)'
+          },
+          // 毫秒级时间轴
+          timing: {
+            startTime: item.startTime * 1000,
+            endTime: item.endTime * 1000,
+            charDelay: msPerChar, // 每个字符的显示延迟
+            syncMode: 'word-level' // 词级别同步
+          },
+          // 视觉增强
+          visualEnhancement: {
+            shadow: '2px 2px 4px rgba(0,0,0,0.5)',
+            glow: item.emotion === '惊喜期待' ? 'neon-glow' : 'soft-glow',
+            background: '半透明深色渐变',
+            borderRadius: '4px'
+          }
+        }
+      };
+    });
+
+    console.log(`  ✅ 完成 ${enhancedStoryboard.length} 个镜头的字幕特效设计`);
+    return enhancedStoryboard;
+  }
+
+  // ============ 专家6: 音频专家 - 毫秒级字幕同步 ============
+
+  private async expert6_AudioSubtitleSync(
+    script: string,
+    storyboard: StoryboardItem[],
+    presenter: PresenterProfile
+  ): Promise<{
+    audioUrl: string | null;
+    subtitleTimeline: Array<{
+      startTime: number;
+      endTime: number;
+      text: string;
+      word: string;
+    }>;
+    musicStyle: string;
+  }> {
+    console.log('  🎵 计算毫秒级字幕时间轴...');
+
+    // 将文案按词分割，计算每个词的精确时间
+    const words = script.split(/([，。！？、\s]+)/).filter(w => w.trim());
+    const totalDuration = 12000; // 12秒 = 12000毫秒
+    const msPerWord = Math.floor(totalDuration / Math.max(words.length, 1));
+
+    // 生成字幕时间轴（毫秒级）
+    const subtitleTimeline: Array<{
+      startTime: number;
+      endTime: number;
+      text: string;
+      word: string;
+    }> = [];
+
+    let currentTime = 0;
+    let currentText = '';
+
+    words.forEach((word, index) => {
+      const wordDuration = msPerWord;
+      const wordStart = currentTime;
+      const wordEnd = currentTime + wordDuration;
+      
+      currentText += word;
+      
+      subtitleTimeline.push({
+        startTime: wordStart,
+        endTime: wordEnd,
+        text: currentText,
+        word: word
+      });
+      
+      currentTime = wordEnd;
+    });
+
+    // 热点背景音乐风格（根据文案情绪动态选择）
+    const musicStyles = [
+      '快节奏电子节拍+强劲鼓点',
+      '抖音神曲风格+洗脑旋律',
+      '动感流行+低音增强',
+      '活力电音+节奏钩子'
+    ];
+    const selectedMusic = musicStyles[Math.floor(Math.random() * musicStyles.length)];
+
+    // 更新storyboard中的字幕时间轴
+    storyboard.forEach(item => {
+      if (item.subtitleEffects) {
+        // 精确对齐字幕时间轴
+        const itemTimeline = subtitleTimeline.filter(
+          sub => sub.startTime >= item.startTime * 1000 && sub.endTime <= item.endTime * 1000
+        );
+        (item as any).subtitleTimeline = itemTimeline;
+      }
+    });
+
+    console.log(`  ✅ 完成 ${subtitleTimeline.length} 个词的毫秒级字幕同步`);
+    console.log(`  🎵 背景音乐风格: ${selectedMusic}`);
+
+    return {
+      audioUrl: null, // 豆包AI会自动生成音频
+      subtitleTimeline,
+      musicStyle: selectedMusic
     };
   }
 

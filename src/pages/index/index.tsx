@@ -239,17 +239,16 @@ const IndexPage = () => {
     }
 
     setCurrentStep('previewing')
-    Taro.showLoading({ title: 'AI分析中，请稍候...' })
+    Taro.showLoading({ title: '专家团队分析中...' })
 
     try {
-      // 使用可用的 /api/video/generate 接口
-      // 视频生成需要较长时间（1-3分钟），设置较长超时
+      // 调用专家协作系统API
+      // 专家流程：图片分析→主播设计→文案→运镜→剪辑→音频→视频生成
       const result = await Network.request({
-        url: '/api/video/generate',
+        url: '/api/video-expert/generate',
         method: 'POST',
         data: {
           images: uploadedImages,
-          openid: AuthService.getOpenid(),
           extraInfo: extraInfo
         },
         timeout: 300000 // 5分钟超时
@@ -258,33 +257,23 @@ const IndexPage = () => {
       const response = result as any
 
       if (response && response.code === 200 && response.data) {
-        // 构造预览数据格式
-        const mockPreviewData = {
-          imageAnalysis: {
-            shopName: response.data.storeName || '店铺',
+        // 使用专家系统返回的数据
+        const expertData = {
+          imageAnalysis: response.data.imageAnalysis || {
+            shopName: '店铺',
             industryName: '零售',
-            products: [{ name: '精选商品', sellingPoints: ['品质优良', '价格实惠'] }],
+            products: [{ name: '精选商品', sellingPoints: ['品质优良'] }],
             atmosphere: '温馨舒适',
             targetAudience: '年轻消费者',
-            sellingPoints: ['精选好物', '超值优惠']
+            sellingPoints: ['精选好物']
           },
-          script: response.data.copywriting || '欢迎光临！',
-          storyboard: uploadedImages.map((_img: string, idx: number) => ({
-            id: idx + 1,
-            imageIndex: idx,
-            duration: 2.4,
-            narration: response.data.copywriting || '',
-            sceneDescription: '精彩展示',
-            cameraMovement: '平移',
-            transition: '淡入淡出',
-            subtitle: '',
-            emotion: '热情'
-          })),
+          script: response.data.script || '欢迎光临！',
+          storyboard: response.data.storyboard || [],
           previewReady: true,
           videoUrl: response.data.videoUrl
         }
         
-        setPreviewData(mockPreviewData)
+        setPreviewData(expertData)
         setCurrentStep('preview')
         Taro.hideLoading()
         Taro.showToast({ title: '视频已生成!', icon: 'success' })
@@ -292,7 +281,7 @@ const IndexPage = () => {
         // 视频已生成，直接跳转到播放页
         if (response.data.videoUrl) {
           Taro.navigateTo({
-            url: `/pages/video-player/index?videoUrl=${encodeURIComponent(response.data.videoUrl)}&copywriting=${encodeURIComponent(response.data.copywriting || '')}`
+            url: `/pages/video-player/index?videoUrl=${encodeURIComponent(response.data.videoUrl)}&copywriting=${encodeURIComponent(response.data.script || '')}`
           })
         }
       } else {
