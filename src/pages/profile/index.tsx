@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import Taro from '@tarojs/taro'
 import { History, Star, ChevronRight, Shield, Award, Camera, Pencil } from 'lucide-react-taro'
 import { Network } from '@/network'
+import { AuthService } from '@/services/auth.service'
 import { DatabaseHelper } from '@/utils/database'
 import './index.css'
 
@@ -64,22 +65,12 @@ const ProfilePage = () => {
         setUser(prev => ({ ...prev, avatar: storedAvatar }))
       }
       
-      // 获取VIP状态
-      const userInfo = Taro.getStorageSync('userInfo')
-      if (userInfo?.openid) {
-        try {
-          const quotaRes = await Network.request({
-            url: `/api/vip/quota?openid=${userInfo.openid}`
-          })
-          
-          if (quotaRes.data?.code === 200) {
-            setIsVIP(quotaRes.data.data.isVip)
-            if (quotaRes.data.data.isVip) {
-              setUser(prev => ({ ...prev, level: '尊享会员' }))
-            }
-          }
-        } catch (e) {
-          console.log('获取VIP状态失败', e)
+      // 从缓存读取VIP状态（不发请求）
+      const userInfo = AuthService.getUserInfo()
+      if (userInfo) {
+        setIsVIP(userInfo.isVip)
+        if (userInfo.isVip) {
+          setUser(prev => ({ ...prev, level: '尊享会员' }))
         }
       }
     } catch (err) {
@@ -114,11 +105,12 @@ const ProfilePage = () => {
   }
 
   useEffect(() => {
-    // 延迟加载，避免小程序启动时同时发起多个请求
+    // 只加载缓存数据，不发起网络请求
+    loadUserInfo()
+    // 统计数据延迟 5 秒加载，避免启动时网络拥堵
     const timer = setTimeout(() => {
       loadStats()
-      loadUserInfo()
-    }, 1000)
+    }, 5000)
     return () => clearTimeout(timer)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
