@@ -5,10 +5,10 @@
   "description": "NestJS server application",
   "scripts": {
     "build": "nest build",
-    "dev": "nest build && node dist/main.js",
-    "start": "node dist/main.js",
+    "dev": "nest build && node dist/src/main.js",
+    "start": "node dist/src/main.js",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main.js"
+    "start:prod": "node dist/src/main.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.958.0",
