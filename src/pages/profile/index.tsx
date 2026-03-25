@@ -114,8 +114,12 @@ const ProfilePage = () => {
   }
 
   useEffect(() => {
-    loadStats()
-    loadUserInfo()
+    // 延迟加载，避免小程序启动时同时发起多个请求
+    const timer = setTimeout(() => {
+      loadStats()
+      loadUserInfo()
+    }, 1000)
+    return () => clearTimeout(timer)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

@@ -53,10 +53,8 @@ const DiscoverPage = () => {
     }
   }, [activeTab])
 
-  // 初始加载
-  useEffect(() => {
-    loadHistory()
-  }, [])
+  // 移除初始加载，避免小程序启动时同时发起多个请求
+  // 用户进入发现页面时会自动触发标签切换加载
 
   // 分类标签
   const categories = [
