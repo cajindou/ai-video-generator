@@ -123,10 +123,15 @@ export class UploadService {
         // 保存文件
         fs.writeFileSync(filepath, file.buffer);
 
+        // 返回完整的HTTPS URL，小程序需要完整URL
+        const baseUrl = process.env.SERVER_URL || 'https://yuxuanbaihuo.site';
+        const fullUrl = `${baseUrl}/api/uploads/${filename}`;
+        
         console.log('[UploadService] 本地存储成功:', filepath);
+        console.log('[UploadService] 返回URL:', fullUrl);
 
         return {
-          url: `/api/uploads/${filename}`,
+          url: fullUrl,
           fileKey: filename,
           filename: filename,
           size: file.size,
