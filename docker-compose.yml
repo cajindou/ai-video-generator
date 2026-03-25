@@ -8,6 +8,8 @@ services:
     environment:
       - NODE_ENV=production
       - COZE_WORKLOAD_IDENTITY_API_KEY=67e98ac0-e718-4776-8193-98af51499943
+      - COZE_INTEGRATION_BASE_URL=https://ark.cn-beijing.volces.com
+      - COZE_INTEGRATION_MODEL_BASE_URL=https://ark.cn-beijing.volces.com/api/v3
       - COZE_API_BASE_URL=https://ark.cn-beijing.volces.com
       - COZE_MODEL_BASE_URL=https://ark.cn-beijing.volces.com/api/v3
       - DATABASE_PATH=/tmp/coze-mini-program.db

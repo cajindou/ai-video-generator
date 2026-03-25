@@ -1,7 +1,0 @@
-{
-  "navigationBarTitleText": "我的",
-  "backgroundColor": "#1a1a2e",
-  "usingComponents": {
-    "comp": "../../comp"
-  }
-}

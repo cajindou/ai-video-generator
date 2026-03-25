@@ -1321,16 +1321,37 @@ ${script}
 - 服装：${presenter.clothing}（全程不变）
 - 标志动作：${presenter.signatureMoves.join('、')}
 
-## 一致性要素
-- 招牌：${consistency?.shopSignStyle}
+## 一致性要素（绝对不可违反）
+- 招牌：${consistency?.shopSignStyle}（⚠️ 绝对不能修改招牌文字、字体、颜色！）
 - 主色调：${consistency?.mainColors?.join('/')}
 - 产品位置：${analysis.products?.map(p => `${p.name}在${p.visualPosition}`).join('；')}
+- 关键视觉元素：${consistency?.keyVisualElements?.join('、')}
 
 ## 空间约束（防穿越）
 ${constraints}
 
 ## 历史最佳运镜参考
 ${bestMoves || '首次设计，追求电影级'}
+
+## ⚡⚡⚡ 黄金3秒法则（最高优先级）⚡⚡⚡
+前3秒是视频成败的关键！必须做到：
+1. **视觉冲击**：开场第一帧就要抓住眼球
+2. **情绪钩子**：用主播的表情/动作/台词制造好奇
+3. **信息预告**：暗示接下来会看到什么
+4. **差异开场**：与普通探店视频完全不同的开场方式
+
+### 黄金3秒开场模板（选一个）
+- 反差型："以为踩雷，结果被圈粉..."
+- 悬念型："来之前朋友说千万别来，我偏不信..."
+- 数字型："排队2小时，到底值不值？"
+- 共鸣型："终于找到不踩雷的店了！"
+- 稀缺型："全城只剩这一家还在坚持..."
+
+## 商业价值核心（视频必须带来转化）
+1. 产品展示要清晰诱人
+2. 卖点要具体可感知
+3. 价格/性价比要突出
+4. 行动号召要有紧迫感
 
 ## 黄金12秒分镜（3-4个镜头）
 
@@ -1531,6 +1552,29 @@ ${bestMoves || '首次设计，追求电影级'}
     // 构建超详细的prompt
     let promptText = '';
 
+    // ============ 黄金3秒法则 ============
+    promptText += `# ═════════════════════════════════════════════\n`;
+    promptText += `# GOLDEN 3 SECONDS RULE (CRITICAL FOR VIRAL)\n`;
+    promptText += `# ═════════════════════════════════════════════\n\n`;
+    
+    promptText += `## First 3 Seconds Requirements\n`;
+    promptText += `- IMMEDIATE visual impact from frame 1\n`;
+    promptText += `- Presenter face/expression must hook viewer instantly\n`;
+    promptText += `- Create curiosity or surprise in first 3 seconds\n`;
+    promptText += `- Show the shop name/sign prominently in opening\n`;
+    promptText += `- Make viewer want to keep watching\n\n`;
+    
+    // ============ 商业价值 ============
+    promptText += `# ═════════════════════════════════════════════\n`;
+    promptText += `# COMMERCIAL VALUE (FOR BUSINESS CONVERSION)\n`;
+    promptText += `# ═════════════════════════════════════════════\n\n`;
+    
+    promptText += `## Value Proposition\n`;
+    promptText += `- Products must look appealing and desirable\n`;
+    promptText += `- Show specific selling points clearly\n`;
+    promptText += `- Create sense of urgency in call-to-action\n`;
+    promptText += `- Make viewer want to visit this shop\n\n`;
+    
     // ============ 视觉一致性 ============
     promptText += `# ═════════════════════════════════════════════\n`;
     promptText += `# VISUAL CONSISTENCY (CRITICAL - MUST FOLLOW)\n`;
@@ -1539,6 +1583,7 @@ ${bestMoves || '首次设计，追求电影级'}
     promptText += `## Shop Identity\n`;
     promptText += `- Shop Name: ${imageAnalysis.shopName}\n`;
     promptText += `- Shop Sign: ${consistency?.shopSignStyle || 'As shown in first image'}\n`;
+    promptText += `- ⚠️ CRITICAL: DO NOT modify shop sign text, font, or colors!\n`;
     promptText += `- Main Colors: ${consistency?.mainColors?.join(', ') || 'As shown'}\n`;
     promptText += `- Key Elements: ${consistency?.keyVisualElements?.join(', ') || 'Must be consistent'}\n\n`;
     
